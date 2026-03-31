@@ -1,8 +1,8 @@
 import React from "react";
 import { ScreenType } from "../../types";
 
-const SCREEN_CONFIG: Record<ScreenType, { title: string; primary: string }> = {
-	calendar: { title: "Calendário", primary: "+ Evento" },
+const SCREEN_CONFIG: Record<ScreenType, { title: string; primary?: string }> = {
+	calendar: { title: "Calendário" },
 	tickets: { title: "Passagens Aéreas", primary: "+ Nova passagem" },
 	reservations: { title: "Reservas", primary: "+ Nova reserva" },
 };
@@ -36,9 +36,11 @@ export default function Navbar({ activeScreen, onPrimary }: NavbarProps) {
 			<span className='font-serif text-base font-semibold flex-1'>
 				{title}
 			</span>
-			<button className='btn btn-primary btn-sm' onClick={onPrimary}>
-				{primary}
-			</button>
+			{primary && (
+				<button className='btn btn-primary btn-sm' onClick={onPrimary}>
+					{primary}
+				</button>
+			)}
 		</div>
 	);
 }

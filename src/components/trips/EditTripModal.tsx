@@ -6,6 +6,7 @@ import {
 	createInvite,
 } from "../../services/tripServices";
 import { TIMEZONE_OPTIONS } from "../tickets/timezoneOptions";
+import { COUNTRY_OPTIONS, isCountryInOptions } from "./countryOptions";
 
 interface Props {
 	id: string;
@@ -105,13 +106,25 @@ export default function EditTripModal({ id }: Props) {
 						<label className='label'>
 							<span className='label-text'>País destino</span>
 						</label>
-						<input
-							type='text'
+						<select
 							value={country}
 							onChange={(e) => setCountry(e.target.value)}
-							className='input input-bordered w-full'
-							required
-						/>
+							className='select select-bordered w-full'
+							required>
+							<option value='' disabled>
+								Selecione um país
+							</option>
+							{country && !isCountryInOptions(country) ? (
+								<option value={country}>
+									{country} (atual)
+								</option>
+							) : null}
+							{COUNTRY_OPTIONS.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.flag} {option.label}
+								</option>
+							))}
+						</select>
 					</div>
 					<div className='form-control'>
 						<label className='label'>

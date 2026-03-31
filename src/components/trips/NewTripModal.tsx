@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTripContext } from "../../context/TripContext";
 import { TIMEZONE_OPTIONS } from "../tickets/timezoneOptions";
+import { COUNTRY_OPTIONS } from "./countryOptions";
 
 export default function NewTripPage() {
 	const { addTrip } = useTripContext();
@@ -60,14 +61,22 @@ export default function NewTripPage() {
 							<label className='label'>
 								<span className='label-text'>País destino</span>
 							</label>
-							<input
-								type='text'
-								placeholder='Ex: Japão'
+							<select
 								value={country}
 								onChange={(e) => setCountry(e.target.value)}
-								className='input input-bordered w-full'
-								required
-							/>
+								className='select select-bordered w-full'
+								required>
+								<option value='' disabled>
+									Selecione um país
+								</option>
+								{COUNTRY_OPTIONS.map((option) => (
+									<option
+										key={option.value}
+										value={option.value}>
+										{option.flag} {option.label}
+									</option>
+								))}
+							</select>
 						</div>
 						<div className='form-control'>
 							<label className='label'>
