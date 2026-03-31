@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../../firebase";
-import { getUserTrips } from "../../services/tripServices";
+import {
+	getUserTrips,
+	joinTripByAccessCode,
+} from "../../services/tripServices";
 import { setDefaultTripId } from "../../utils/tripCookie";
 import type { Trip } from "@/types";
 
@@ -11,17 +14,23 @@ export default function TripSelectPage() {
 	const navigate = useNavigate();
 	const [trips, setTrips] = useState<Trip[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [joinCode, setJoinCode] = useState("");
+	const [joining, setJoining] = useState(false);
+	const [joinError, setJoinError] = useState<string | null>(null);
+
+	const loadTrips = async () => {
+		if (!user?.email || !user.uid) return;
+		setLoading(true);
+		try {
+			setTrips(await getUserTrips(user.email, user.uid));
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!user?.email || !user.uid) return;
-		(async () => {
-			setLoading(true);
-			try {
-				setTrips(await getUserTrips(user.email!, user.uid));
-			} finally {
-				setLoading(false);
-			}
-		})();
+		loadTrips();
 	}, [user]);
 
 	const handleSelect = (trip: Trip) => {
@@ -31,6 +40,30 @@ export default function TripSelectPage() {
 
 	const handleNewTrip = () => {
 		navigate("/new-trip");
+	};
+
+	const handleJoinByCode = async () => {
+		if (!user?.email) return;
+		const normalizedCode = joinCode.replace(/\D/g, "").slice(0, 6);
+		if (normalizedCode.length !== 6) {
+			setJoinError("Informe um codigo valido com 6 digitos.");
+			return;
+		}
+
+		setJoining(true);
+		setJoinError(null);
+		try {
+			const trip = await joinTripByAccessCode(normalizedCode, user.email);
+			if (!trip) {
+				setJoinError("Codigo nao encontrado.");
+				return;
+			}
+
+			setDefaultTripId(trip.id);
+			navigate("/dashboard");
+		} finally {
+			setJoining(false);
+		}
 	};
 
 	if (loading) {
@@ -50,6 +83,44 @@ export default function TripSelectPage() {
 				<p className='text-base-content/60 text-center text-sm mb-6'>
 					Escolha a viagem que deseja acessar
 				</p>
+
+				<div className='card bg-base-100 shadow-sm border border-base-200 p-4 mb-4'>
+					<p className='text-sm font-medium mb-2'>
+						Entrar com codigo
+					</p>
+					<div className='flex gap-2'>
+						<input
+							type='text'
+							inputMode='numeric'
+							maxLength={6}
+							placeholder='000000'
+							value={joinCode}
+							onChange={(e) => {
+								setJoinCode(
+									e.target.value
+										.replace(/\D/g, "")
+										.slice(0, 6),
+								);
+								setJoinError(null);
+							}}
+							className='input input-bordered input-sm flex-1 font-mono tracking-widest'
+						/>
+						<button
+							type='button'
+							onClick={handleJoinByCode}
+							disabled={joining || joinCode.length !== 6}
+							className='btn btn-primary btn-sm'>
+							{joining ? (
+								<span className='loading loading-spinner loading-xs' />
+							) : (
+								"Entrar"
+							)}
+						</button>
+					</div>
+					{joinError ? (
+						<p className='text-xs text-error mt-2'>{joinError}</p>
+					) : null}
+				</div>
 
 				{trips.length === 0 ? (
 					<div className='card bg-base-100 shadow-sm border border-base-200 p-8 text-center'>

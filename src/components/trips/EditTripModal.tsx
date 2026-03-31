@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useTripContext } from "../../context/TripContext";
 import {
-	addEmailToWhitelist,
+	ensureTripAccessCode,
 	removeEmailFromWhitelist,
-	createInvite,
 } from "../../services/tripServices";
 import { TIMEZONE_OPTIONS } from "../tickets/timezoneOptions";
 import { COUNTRY_OPTIONS, isCountryInOptions } from "./countryOptions";
@@ -17,17 +16,17 @@ export default function EditTripModal({ id }: Props) {
 	const [name, setName] = useState("");
 	const [country, setCountry] = useState("");
 	const [defaultTimezone, setDefaultTimezone] = useState("");
-	const [newEmail, setNewEmail] = useState("");
+	const [accessCode, setAccessCode] = useState("");
 	const [saving, setSaving] = useState(false);
-	const [inviteLink, setInviteLink] = useState<string | null>(null);
-	const [inviting, setInviting] = useState(false);
+	const [copySuccess, setCopySuccess] = useState(false);
 
 	React.useEffect(() => {
 		if (activeTrip) {
 			setName(activeTrip.name);
 			setCountry(activeTrip.country);
 			setDefaultTimezone(activeTrip.defaultTimezone || "");
-			setInviteLink(null);
+			setAccessCode(activeTrip.accessCode || "");
+			setCopySuccess(false);
 		}
 	}, [activeTrip]);
 
@@ -36,25 +35,37 @@ export default function EditTripModal({ id }: Props) {
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!name.trim() || !country.trim()) return;
+
 		setSaving(true);
 		try {
+			const currentCode = (activeTrip.accessCode || "").trim();
+			const ensuredCode = /^\d{6}$/.test(currentCode)
+				? currentCode
+				: await ensureTripAccessCode(activeTrip.id);
+
 			await editTrip(activeTrip.id, {
 				name: name.trim(),
 				country: country.trim(),
 				defaultTimezone: defaultTimezone || "",
+				accessCode: ensuredCode,
 			});
-			(document.getElementById(id) as HTMLDialogElement)?.close();
+
+			setAccessCode(ensuredCode);
+			await refreshTrips();
+		} catch (error: unknown) {
+			console.error("Erro ao salvar viagem:", error);
+			const message =
+				error instanceof Error ? error.message : String(error);
+			if (message.includes("Missing or insufficient permissions")) {
+				alert(
+					"Sem permissao no Firestore para gerar/atualizar a chave de acesso.",
+				);
+			} else {
+				alert("Nao foi possivel salvar a viagem.");
+			}
 		} finally {
 			setSaving(false);
 		}
-	};
-
-	const handleAddEmail = async () => {
-		const email = newEmail.trim().toLowerCase();
-		if (!email) return;
-		await addEmailToWhitelist(activeTrip.id, email);
-		setNewEmail("");
-		await refreshTrips();
 	};
 
 	const handleRemoveEmail = async (email: string) => {
@@ -63,20 +74,11 @@ export default function EditTripModal({ id }: Props) {
 		await refreshTrips();
 	};
 
-	const handleSendInvite = async () => {
-		const email = newEmail.trim().toLowerCase();
-		if (!email) return;
-		setInviting(true);
-		try {
-			const invite = await createInvite(activeTrip.id, email);
-			await addEmailToWhitelist(activeTrip.id, email);
-			await refreshTrips();
-			const link = `${window.location.origin}/invite/${invite.id}`;
-			setInviteLink(link);
-			setNewEmail("");
-		} finally {
-			setInviting(false);
-		}
+	const handleCopyCode = async () => {
+		if (!accessCode) return;
+		await navigator.clipboard.writeText(accessCode);
+		setCopySuccess(true);
+		setTimeout(() => setCopySuccess(false), 1600);
 	};
 
 	return (
@@ -84,7 +86,7 @@ export default function EditTripModal({ id }: Props) {
 			<div className='modal-box max-w-lg'>
 				<form method='dialog'>
 					<button className='btn btn-sm btn-circle btn-ghost absolute right-2 top-2'>
-						✕
+						x
 					</button>
 				</form>
 				<h3 className='font-bold text-lg mb-4'>Editar Viagem</h3>
@@ -104,7 +106,7 @@ export default function EditTripModal({ id }: Props) {
 					</div>
 					<div className='form-control'>
 						<label className='label'>
-							<span className='label-text'>País destino</span>
+							<span className='label-text'>Pais destino</span>
 						</label>
 						<select
 							value={country}
@@ -112,7 +114,7 @@ export default function EditTripModal({ id }: Props) {
 							className='select select-bordered w-full'
 							required>
 							<option value='' disabled>
-								Selecione um país
+								Selecione um pais
 							</option>
 							{country && !isCountryInOptions(country) ? (
 								<option value={country}>
@@ -128,13 +130,13 @@ export default function EditTripModal({ id }: Props) {
 					</div>
 					<div className='form-control'>
 						<label className='label'>
-							<span className='label-text'>Timezone padrão</span>
+							<span className='label-text'>Timezone padrao</span>
 						</label>
 						<select
 							value={defaultTimezone}
 							onChange={(e) => setDefaultTimezone(e.target.value)}
 							className='select select-bordered w-full'>
-							<option value=''>Não definido</option>
+							<option value=''>Nao definido</option>
 							{TIMEZONE_OPTIONS.map((tz) => (
 								<option key={tz.value} value={tz.value}>
 									{tz.label}
@@ -156,6 +158,35 @@ export default function EditTripModal({ id }: Props) {
 					</div>
 				</form>
 
+				<div className='mt-4 p-3 border border-base-200 rounded-lg bg-base-200/40'>
+					<div className='flex items-center justify-between gap-2 mb-1'>
+						<p className='text-sm font-semibold'>Chave de acesso</p>
+						<span className='text-[11px] text-base-content/60'>
+							6 digitos
+						</span>
+					</div>
+					<p className='text-xs text-base-content/60 mb-2'>
+						Use este codigo para outras pessoas entrarem na viagem
+						em "Selecionar viagem".
+					</p>
+					<div className='flex items-center gap-2'>
+						<input
+							type='text'
+							value={accessCode || "Salve a viagem para gerar"}
+							readOnly
+							disabled
+							className='input input-bordered input-sm flex-1 font-mono tracking-widest'
+						/>
+						<button
+							type='button'
+							className='btn btn-sm btn-outline'
+							onClick={handleCopyCode}
+							disabled={!accessCode}>
+							{copySuccess ? "Copiado" : "Copiar"}
+						</button>
+					</div>
+				</div>
+
 				<div className='divider'>Membros</div>
 
 				<ul className='space-y-1 mb-3'>
@@ -175,66 +206,12 @@ export default function EditTripModal({ id }: Props) {
 								<button
 									className='btn btn-ghost btn-xs text-error'
 									onClick={() => handleRemoveEmail(email)}>
-									✕
+									x
 								</button>
 							)}
 						</li>
 					))}
 				</ul>
-
-				<div className='divider'>Convidar usuário</div>
-
-				<div className='flex gap-2'>
-					<input
-						type='email'
-						placeholder='email@exemplo.com'
-						value={newEmail}
-						onChange={(e) => {
-							setNewEmail(e.target.value);
-							setInviteLink(null);
-						}}
-						className='input input-bordered input-sm flex-1'
-					/>
-					<button
-						className='btn btn-sm btn-outline'
-						onClick={handleAddEmail}
-						disabled={!newEmail.trim()}>
-						Adicionar
-					</button>
-					<button
-						className='btn btn-sm btn-primary'
-						onClick={handleSendInvite}
-						disabled={!newEmail.trim() || inviting}>
-						{inviting ? (
-							<span className='loading loading-spinner loading-xs' />
-						) : (
-							"Gerar convite"
-						)}
-					</button>
-				</div>
-
-				{inviteLink && (
-					<div className='mt-3 bg-success/10 border border-success/30 rounded-lg p-3'>
-						<p className='text-xs text-success font-medium mb-1'>
-							Link de convite gerado:
-						</p>
-						<div className='flex items-center gap-2'>
-							<input
-								type='text'
-								readOnly
-								value={inviteLink}
-								className='input input-bordered input-xs flex-1 font-mono text-xs'
-							/>
-							<button
-								className='btn btn-xs btn-ghost'
-								onClick={() =>
-									navigator.clipboard.writeText(inviteLink)
-								}>
-								Copiar
-							</button>
-						</div>
-					</div>
-				)}
 			</div>
 			<form method='dialog' className='modal-backdrop'>
 				<button>close</button>

@@ -62,6 +62,7 @@ export interface Trip {
 	name: string;
 	country: string;
 	defaultTimezone?: string;
+	accessCode?: string;
 	ownerId: string;
 	ownerEmail: string;
 	whitelistedEmails: string[];

@@ -7,6 +7,7 @@ import {
 	doc,
 	getDoc,
 	getDocs,
+	limit,
 	query,
 	updateDoc,
 	where,
@@ -17,10 +18,39 @@ import type { Trip, TripInvite } from "../types";
 const TRIPS_COL = "trips";
 const INVITES_COL = "invites";
 
+function randomSixDigitCode(): string {
+	return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function isAccessCodeInUse(code: string): Promise<boolean> {
+	const snap = await getDocs(
+		query(
+			collection(db, TRIPS_COL),
+			where("accessCode", "==", code),
+			limit(1),
+		),
+	);
+	return !snap.empty;
+}
+
+async function generateUniqueAccessCode(maxAttempts = 25): Promise<string> {
+	for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+		const code = randomSixDigitCode();
+		if (!(await isAccessCodeInUse(code))) {
+			return code;
+		}
+	}
+	throw new Error("Nao foi possivel gerar um codigo unico de acesso");
+}
+
 export async function createTripRecord(
 	trip: Omit<Trip, "id" | "createdAt">,
 ): Promise<Trip> {
-	const data = { ...trip, createdAt: new Date().toISOString() };
+	const data = {
+		...trip,
+		accessCode: trip.accessCode || (await generateUniqueAccessCode()),
+		createdAt: new Date().toISOString(),
+	};
 	const ref = await addDoc(collection(db, TRIPS_COL), data);
 	return { id: ref.id, ...data };
 }
@@ -106,6 +136,45 @@ export async function getInviteRecordById(
 
 export async function markInviteAsAccepted(inviteId: string): Promise<void> {
 	await updateDoc(doc(db, INVITES_COL, inviteId), { accepted: true });
+}
+
+export async function ensureTripAccessCode(tripId: string): Promise<string> {
+	const trip = await getTripRecordById(tripId);
+	if (!trip) throw new Error("Viagem nao encontrada");
+
+	const existingCode = String(trip.accessCode ?? "").trim();
+	if (/^\d{6}$/.test(existingCode)) {
+		return existingCode;
+	}
+
+	const accessCode = await generateUniqueAccessCode();
+	await updateDoc(doc(db, TRIPS_COL, tripId), { accessCode });
+	return accessCode;
+}
+
+export async function joinTripByAccessCode(
+	accessCode: string,
+	userEmail: string,
+): Promise<Trip | null> {
+	const normalizedCode = accessCode.replace(/\D/g, "").slice(0, 6);
+	if (!/^\d{6}$/.test(normalizedCode)) return null;
+
+	const snap = await getDocs(
+		query(
+			collection(db, TRIPS_COL),
+			where("accessCode", "==", normalizedCode),
+			limit(1),
+		),
+	);
+
+	if (snap.empty) return null;
+
+	const tripDoc = snap.docs[0];
+	if (!tripDoc) return null;
+	const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip;
+	await addTripWhitelistEmail(trip.id, userEmail.toLowerCase());
+
+	return getTripRecordById(trip.id);
 }
 
 export async function createTrip(

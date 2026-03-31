@@ -1,5 +1,5 @@
 import React from "react";
-import { loginWithGoogle, loginWithEmail } from "./firebase";
+import { loginWithGoogle } from "./firebase";
 
 function Login() {
 	const handleGoogleLogin = async () => {
@@ -10,27 +10,34 @@ function Login() {
 		}
 	};
 
-	const handleEmailLogin = async () => {
-		try {
-			await loginWithEmail("email@example.com", "password123");
-		} catch (error) {
-			console.error("Erro ao fazer login com email:", error);
-		}
-	};
-
 	return (
-		<div className='flex flex-col items-center justify-center h-screen'>
-			<h1 className='text-2xl font-bold mb-4'>Login</h1>
-			<button
-				onClick={handleGoogleLogin}
-				className='bg-blue-500 text-white px-4 py-2 rounded mb-2'>
-				Login com Google
-			</button>
-			<button
-				onClick={handleEmailLogin}
-				className='bg-green-500 text-white px-4 py-2 rounded'>
-				Login com Email
-			</button>
+		<div className='min-h-screen bg-base-200 flex items-center justify-center p-4'>
+			<div className='w-full max-w-md rounded-2xl border border-base-300 bg-base-100 shadow-xl'>
+				<div className='p-6 sm:p-8'>
+					<div className='mb-6'>
+						<p className='text-xs uppercase tracking-[0.16em] text-base-content/50'>
+							Bem-vindo
+						</p>
+						<h1 className='mt-2 text-3xl font-bold'>Trip2Gether</h1>
+						<p className='mt-3 text-sm text-base-content/70 leading-relaxed'>
+							Organize viagens em grupo em um so lugar: passagens,
+							reservas, calendario e compartilhamento com sua
+							galera.
+						</p>
+					</div>
+
+					<div className='rounded-xl border border-base-200 bg-base-200/50 p-4 text-sm text-base-content/70 mb-5'>
+						Entre com sua conta Google para acessar suas viagens ou
+						entrar em uma viagem usando codigo de acesso.
+					</div>
+
+					<button
+						onClick={handleGoogleLogin}
+						className='btn btn-primary w-full'>
+						Continuar com Google
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }
