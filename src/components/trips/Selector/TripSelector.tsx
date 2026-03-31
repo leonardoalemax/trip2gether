@@ -4,7 +4,13 @@ import AppIcon from "../../Icons/AppIcon";
 import CountryFlag from "../../Icons/CountryFlag";
 import IconButton from "./children/IconButton";
 
-export default function TripSelector() {
+interface TripSelectorProps {
+	variant?: "desktop-inline" | "mobile-flag";
+}
+
+export default function TripSelector({
+	variant = "desktop-inline",
+}: TripSelectorProps) {
 	const { trips, activeTrip, selectTrip, loading } = useTripContext();
 	const navigate = useNavigate();
 
@@ -16,16 +22,35 @@ export default function TripSelector() {
 		)?.showModal();
 	};
 
+	if (variant === "mobile-flag") {
+		return (
+			<button
+				type='button'
+				onClick={() => navigate("/select-trip")}
+				className='h-9 w-9 rounded-lg border border-base-300 bg-base-200/60 flex items-center justify-center'
+				aria-label='Selecionar viagem'>
+				{loading ? (
+					<span className='loading loading-spinner loading-xs' />
+				) : (
+					<CountryFlag
+						country={activeTrip?.country}
+						className='text-base leading-none'
+					/>
+				)}
+			</button>
+		);
+	}
+
 	return (
-		<div className='p-3 border-b border-base-200'>
+		<div className='w-full'>
 			{loading ? (
 				<div className='flex items-center gap-2 text-xs text-base-content/50'>
 					<span className='loading loading-spinner loading-xs' />
 					<span>Carregando viagens...</span>
 				</div>
 			) : trips.length > 0 ? (
-				<div className='space-y-2'>
-					<div className='rounded-md border border-base-300 bg-base-200/40 px-2 py-1.5'>
+				<div className='flex items-center gap-2'>
+					<div className='rounded-md border border-base-300 bg-base-200/40 px-2 py-1.5 min-w-0 flex-1'>
 						<div className='flex items-center gap-2'>
 							<div className='h-6 w-6 rounded-md bg-base-100 border border-base-300 flex items-center justify-center shrink-0'>
 								<CountryFlag
@@ -68,7 +93,7 @@ export default function TripSelector() {
 							</div>
 						</div>
 					</div>
-					<div className='flex items-center justify-end gap-0.5'>
+					<div className='hidden lg:flex items-center justify-end gap-0.5'>
 						<IconButton
 							onClick={() => navigate("/select-trip")}
 							label='Trocar viagem'

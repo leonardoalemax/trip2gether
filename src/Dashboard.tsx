@@ -18,14 +18,7 @@ function Dashboard() {
 		<TripProvider>
 			<Layout
 				activeScreen={activeScreen}
-				onScreenChange={(screen) => {
-					setActiveScreen(screen);
-					(
-						document.getElementById(
-							"drawer-toggle",
-						) as HTMLInputElement
-					).checked = false;
-				}}
+				onScreenChange={setActiveScreen}
 				onPrimary={handlePrimary}>
 				{activeScreen === "calendar" && <CalendarViewScreen />}
 				{activeScreen === "tickets" && <TicketsScreen />}

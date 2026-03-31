@@ -86,7 +86,7 @@ const ReservationsScreen: React.FC = () => {
 	}
 
 	return (
-		<div className='p-4 space-y-4 max-w-2xl'>
+		<div className='p-4 space-y-4 max-w-2xl mx-auto'>
 			<div className='flex items-center justify-between'>
 				<h2 className='text-xl font-bold'>Reservas</h2>
 				{!draft && (

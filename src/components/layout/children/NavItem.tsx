@@ -24,7 +24,11 @@ export default function NavItem({
 	return (
 		<li>
 			<a
-				className={`text-sm ${isActive ? "-active font-medium" : ""}`}
+				className={`text-sm transition-colors rounded-lg hover:bg-base-300/50 ${
+					isActive
+						? "font-semibold bg-base-300/50 text-base-content"
+						: "text-base-content/75"
+				}`}
 				onClick={() => onClick(id)}
 				style={{ cursor: "pointer" }}>
 				<AppIcon name={icon} className='h-4 w-4' />

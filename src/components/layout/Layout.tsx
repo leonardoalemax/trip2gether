@@ -1,7 +1,8 @@
 import React from "react";
 import { ScreenType } from "../../types";
-import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";
+import Header from "./Header";
+import AppIcon from "../Icons/AppIcon";
+import { LAYOUT_NAV_ITEMS } from "./navItems";
 
 interface LayoutProps {
 	activeScreen: ScreenType;
@@ -13,26 +14,35 @@ interface LayoutProps {
 export default function Layout({
 	activeScreen,
 	onScreenChange,
-	onPrimary,
 	children,
 }: LayoutProps) {
 	return (
-		<div className='drawer lg:drawer-open' style={{ height: "100vh" }}>
-			<input
-				id='drawer-toggle'
-				type='checkbox'
-				className='drawer-toggle'
-			/>
-			<div className='drawer-content flex flex-col h-screen overflow-hidden'>
-				<Navbar activeScreen={activeScreen} onPrimary={onPrimary} />
-				<div className='flex-1 overflow-y-auto p-4 lg:p-6'>
-					{children}
-				</div>
-			</div>
-			<Sidebar
+		<div className='h-screen flex flex-col overflow-hidden'>
+			<Header
 				activeScreen={activeScreen}
 				onScreenChange={onScreenChange}
 			/>
+			<main className='flex-1 overflow-y-auto px-4 lg:px-6 pb-24 md:pb-6 pt-0'>
+				{children}
+			</main>
+			<footer className='md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-base-200 bg-base-100/95 backdrop-blur supports-backdrop-filter:bg-base-100/80'>
+				<nav className='grid grid-cols-3 gap-1 p-2'>
+					{LAYOUT_NAV_ITEMS.map((item) => (
+						<button
+							key={item.id}
+							type='button'
+							onClick={() => onScreenChange(item.id)}
+							aria-label={item.label}
+							className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
+								activeScreen === item.id
+									? "bg-primary/15 text-primary"
+									: "text-base-content/60"
+							}`}>
+							<AppIcon name={item.icon} className='h-5 w-5' />
+						</button>
+					))}
+				</nav>
+			</footer>
 		</div>
 	);
 }

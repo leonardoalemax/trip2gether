@@ -18,9 +18,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 	if (!draft) return null;
 
 	return (
-		<div className='p-4 border border-primary/30 bg-primary/5 rounded-xl space-y-3'>
+		<div className='w-full p-4 border border-primary/30 bg-primary/5 rounded-xl space-y-3 shadow-sm'>
 			<p className='text-sm font-semibold'>Nova reserva</p>
-			<div className='grid grid-cols-2 gap-2'>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
 				<ReservationFields
 					values={draft}
 					onChange={(field, value) =>

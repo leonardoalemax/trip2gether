@@ -20,11 +20,12 @@ const TicketList: React.FC<TicketListProps> = ({
 	setTickets,
 }) => {
 	return (
-		<div className='space-y-3'>
+		<div className='space-y-3 w-full'>
 			{tickets.map((ticket, i) => (
 				<div
 					key={ticket.id}
-					className='p-4 border border-base-200 rounded-xl space-y-3 bg-base-100'>
+					className='w-full p-4 border border-base-200 rounded-xl space-y-3 shadow-[0_1px_2px_rgba(15,23,42,0.08)]'
+					style={{ backgroundColor: "rgba(255, 255, 255, 0.4)" }}>
 					<div className='flex items-center justify-between'>
 						<span className='text-sm font-semibold text-base-content/70'>
 							Trecho {i + 1}

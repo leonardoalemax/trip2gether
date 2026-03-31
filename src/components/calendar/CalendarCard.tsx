@@ -53,7 +53,9 @@ export default function CalendarCard() {
 
 	if (activeTripLoading || ticketsLoading || reservationsLoading) {
 		return (
-			<div className='card bg-base-100 border border-base-200 shadow-sm'>
+			<div
+				className='card border border-base-200 shadow-[0_1px_2px_rgba(15,23,42,0.08)]'
+				style={{ backgroundColor: "rgba(255,255,255,0.4)" }}>
 				<div className='card-body p-4'>
 					<div className='flex items-center gap-3 text-sm text-base-content/60'>
 						<span className='loading loading-spinner loading-sm' />
@@ -65,50 +67,60 @@ export default function CalendarCard() {
 	}
 
 	return (
-		<div className='card bg-base-100 border border-base-200 shadow-sm'>
-			<div className='card-body p-4 gap-4'>
+		<div>
+			{/* Legenda: sticky full-width no mobile, estática no desktop */}
+			<div className='sticky top-0 z-20 -mx-4 lg:-mx-6 px-4 lg:px-6 pt-4 lg:pt-6 pb-3 bg-base-100/95 backdrop-blur border-b border-base-200 mb-4 md:static md:mx-0 md:px-0 md:pt-4 md:lg:pt-6 md:pb-0 md:bg-transparent md:backdrop-blur-none md:border-b-0 md:mb-4'>
 				<CalendarLegend
 					reservations={reservations}
 					availableTimezones={availableTimezones}
 					selectedTimezone={selectedTimezone}
 					onTimezoneChange={setSelectedTimezone}
 				/>
-				{selectedDayIso ? (
-					<CalendarDayView
-						dayIso={selectedDayIso}
-						allDayIsos={allDayIsos}
-						ticketMomentsBySlot={ticketMomentsBySlot}
-						reservationMomentsBySlot={reservationMomentsBySlot}
-						reservationColorByDateSlot={reservationColorByDateSlot}
-						onSelectDay={setSelectedDayIso}
-						onClose={() => setSelectedDayIso(null)}
-					/>
-				) : null}
+			</div>
 
-				{/* Calendar weeks */}
-				{weeks.length === 0 ? (
-					<div className='rounded-lg border border-base-200 p-4 text-sm text-base-content/60'>
-						Nenhum dado de calendario para exibir.
-					</div>
-				) : !selectedDayIso ? (
-					<div className='space-y-6'>
-						{weeks.map((wDays, wi) => (
-							<CalendarWeek
-								key={wi}
-								weekDays={wDays}
-								weekIndex={wi}
-								ticketMomentsBySlot={ticketMomentsBySlot}
-								reservationMomentsBySlot={
-									reservationMomentsBySlot
-								}
-								reservationColorByDateSlot={
-									reservationColorByDateSlot
-								}
-								onDayHeaderClick={setSelectedDayIso}
-							/>
-						))}
-					</div>
-				) : null}
+			<div
+				className='card border border-base-200 shadow-[0_1px_2px_rgba(15,23,42,0.08)]'
+				style={{ backgroundColor: "rgba(255,255,255,0.4)" }}>
+				<div className='card-body p-4 gap-4'>
+					{selectedDayIso ? (
+						<CalendarDayView
+							dayIso={selectedDayIso}
+							allDayIsos={allDayIsos}
+							ticketMomentsBySlot={ticketMomentsBySlot}
+							reservationMomentsBySlot={reservationMomentsBySlot}
+							reservationColorByDateSlot={
+								reservationColorByDateSlot
+							}
+							onSelectDay={setSelectedDayIso}
+							onClose={() => setSelectedDayIso(null)}
+						/>
+					) : null}
+
+					{/* Calendar weeks */}
+					{weeks.length === 0 ? (
+						<div className='rounded-lg border border-base-200 p-4 text-sm text-base-content/60'>
+							Nenhum dado de calendario para exibir.
+						</div>
+					) : !selectedDayIso ? (
+						<div className='space-y-6'>
+							{weeks.map((wDays, wi) => (
+								<CalendarWeek
+									key={wi}
+									weekDays={wDays}
+									weekIndex={wi}
+									ticketMomentsBySlot={ticketMomentsBySlot}
+									reservationMomentsBySlot={
+										reservationMomentsBySlot
+									}
+									reservationColorByDateSlot={
+										reservationColorByDateSlot
+									}
+									onDayHeaderClick={setSelectedDayIso}
+								/>
+							))}
+						</div>
+					) : null}
+				</div>
 			</div>
 		</div>
 	);
