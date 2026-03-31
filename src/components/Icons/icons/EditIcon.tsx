@@ -1,0 +1,22 @@
+interface IconProps {
+	className?: string;
+}
+
+export default function EditIcon({ className = "h-4 w-4" }: IconProps) {
+	return (
+		<svg
+			xmlns='http://www.w3.org/2000/svg'
+			className={className}
+			fill='none'
+			viewBox='0 0 24 24'
+			stroke='currentColor'
+			aria-hidden='true'>
+			<path
+				strokeLinecap='round'
+				strokeLinejoin='round'
+				strokeWidth='2'
+				d='M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z'
+			/>
+		</svg>
+	);
+}

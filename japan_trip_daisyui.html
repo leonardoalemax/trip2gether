@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Japão Set 2025</title>
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<style>
+  body { font-family: 'DM Sans', sans-serif; }
+  .font-serif { font-family: 'Noto Serif JP', serif; }
+  .sidebar-active { background: oklch(var(--p)/0.1); color: oklch(var(--p)); border-right: 3px solid oklch(var(--p)); }
+  .post-enter { animation: fadeUp 0.3s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .city-row { display: grid; grid-template-columns: 34px 1fr 1fr 1fr auto; gap: 8px; align-items: center; }
+  input[type="color"] { width: 34px; height: 34px; padding: 2px; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 8px; cursor: pointer; background: none; }
+</style>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+<div class="drawer lg:drawer-open" style="height:100vh;">
+  <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+
+  <div class="drawer-content flex flex-col h-screen overflow-hidden">
+    <div class="navbar bg-base-100 border-b border-base-300 min-h-12 px-4 gap-2 flex-shrink-0">
+      <label for="drawer-toggle" class="btn btn-ghost btn-sm drawer-button lg:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </label>
+      <span class="font-serif text-base font-semibold flex-1" id="topbar-title">Feed da viagem</span>
+      <button class="btn btn-primary btn-sm" id="btn-primary" onclick="handlePrimary()">+ Novo post</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+
+      <!-- FEED -->
+      <div id="screen-feed" class="max-w-xl mx-auto space-y-4">
+        <div class="card bg-base-100 shadow-sm border border-base-200 post-enter">
+          <div class="card-body p-4 gap-3">
+            <div class="flex items-center gap-2">
+              <div class="avatar placeholder"><div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span>MK</span></div></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium leading-none">Mari K. <span class="badge badge-info badge-xs ml-1">link</span></p>
+                <p class="text-xs text-base-content/50 mt-0.5">há 2h</p>
+              </div>
+            </div>
+            <p class="text-sm">Achei esse roteiro incrível pro bairro de Yanaka! Vale muito a pena pra nossa tarde livre.</p>
+            <div class="border border-base-200 rounded-xl overflow-hidden flex">
+              <div class="bg-info/20 text-info w-20 flex-shrink-0 flex items-center justify-center text-xs font-medium">imagem</div>
+              <div class="p-3"><p class="text-sm font-medium">Yanaka: o lado histórico de Tóquio</p><p class="text-xs text-base-content/50 mt-0.5">Ruelas, gatos, templos e lojas vintage.</p></div>
+            </div>
+            <div class="flex gap-4 pt-1 border-t border-base-200">
+              <button class="btn btn-ghost btn-xs">💬 Comentar (3)</button>
+              <button class="btn btn-ghost btn-xs">♡ Curtir (5)</button>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 post-enter" style="animation-delay:.07s">
+          <div class="card-body p-4 gap-3">
+            <div class="flex items-center gap-2">
+              <div class="avatar placeholder"><div class="bg-warning text-warning-content rounded-full w-8 text-xs"><span>RS</span></div></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium leading-none">Rafa S. <span class="badge badge-success badge-xs ml-1">imagem</span></p>
+                <p class="text-xs text-base-content/50 mt-0.5">ontem</p>
+              </div>
+            </div>
+            <p class="text-sm">Mapa do metrô de Tóquio — vamos precisar muito disso!</p>
+            <div class="bg-success/10 rounded-xl h-28 flex items-center justify-center text-sm text-success font-medium">[ imagem — mapa do metrô ]</div>
+            <div class="flex gap-4 pt-1 border-t border-base-200">
+              <button class="btn btn-ghost btn-xs">💬 Comentar (1)</button>
+              <button class="btn btn-ghost btn-xs">♡ Curtir (8)</button>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 post-enter" style="animation-delay:.14s">
+          <div class="card-body p-4 gap-3">
+            <div class="flex items-center gap-2">
+              <div class="avatar placeholder"><div class="bg-error text-error-content rounded-full w-8 text-xs"><span>LO</span></div></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium leading-none">Lu O. <span class="badge badge-warning badge-xs ml-1">enquete</span></p>
+                <p class="text-xs text-base-content/50 mt-0.5">há 3 dias</p>
+              </div>
+            </div>
+            <p class="text-sm font-medium">Qual cidade você mais quer visitar fora de Tóquio?</p>
+            <div class="space-y-2">
+              <div><div class="flex justify-between text-xs mb-1"><span>Kyoto</span><span class="font-medium">60%</span></div><progress class="progress progress-primary w-full h-2" value="60" max="100"></progress></div>
+              <div><div class="flex justify-between text-xs mb-1"><span>Osaka</span><span class="font-medium">25%</span></div><progress class="progress progress-primary w-full h-2" value="25" max="100"></progress></div>
+              <div><div class="flex justify-between text-xs mb-1"><span>Nara</span><span class="font-medium">15%</span></div><progress class="progress progress-primary w-full h-2" value="15" max="100"></progress></div>
+            </div>
+            <p class="text-xs text-base-content/40">7 votos · encerra em 2 dias</p>
+            <div class="flex gap-4 pt-1 border-t border-base-200">
+              <button class="btn btn-ghost btn-xs">💬 Comentar (2)</button>
+              <button class="btn btn-ghost btn-xs">♡ Curtir (4)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div id="screen-calendar" class="hidden max-w-5xl mx-auto space-y-5">
+
+        <!-- CIDADES BASE CARD -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4 gap-3">
+            <div class="flex items-center justify-between mb-1">
+              <div>
+                <h3 class="font-serif font-semibold text-sm">Cidades base</h3>
+                <p class="text-xs text-base-content/40 mt-0.5">As cores aparecem no fundo de cada período do calendário</p>
+              </div>
+              <button class="btn btn-outline btn-xs" onclick="addCity()">+ Cidade</button>
+            </div>
+            <!-- column labels -->
+            <div class="city-row px-1 pb-1 border-b border-base-100">
+              <div class="text-xs text-base-content/30 font-medium">Cor</div>
+              <div class="text-xs text-base-content/30 font-medium">Cidade</div>
+              <div class="text-xs text-base-content/30 font-medium">Chegada (data · hora)</div>
+              <div class="text-xs text-base-content/30 font-medium">Saída (data · hora)</div>
+              <div></div>
+            </div>
+            <div id="cities-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- MAP CARD -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4 gap-3">
+            <div>
+              <h3 class="font-serif font-semibold text-sm">Mapa das cidades base</h3>
+              <p class="text-xs text-base-content/40 mt-0.5">Atualiza conforme as cidades acima</p>
+            </div>
+            <div id="trip-map" style="height:320px;border-radius:10px;border:1px solid #f3f4f6;overflow:hidden;z-index:0;"></div>
+          </div>
+        </div>
+
+        <!-- EVENTS CARD -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4 gap-3">
+            <div class="flex items-center justify-between mb-1">
+              <div>
+                <h3 class="font-serif font-semibold text-sm">Eventos</h3>
+                <p class="text-xs text-base-content/40 mt-0.5">Aparecem no calendário nos dias e períodos correspondentes</p>
+              </div>
+              <button class="btn btn-outline btn-xs" onclick="addEvent()">+ Evento</button>
+            </div>
+            <div style="display:grid;grid-template-columns:90px 1fr 90px auto;gap:8px;align-items:center;" class="px-1 pb-1 border-b border-base-100">
+              <div class="text-xs text-base-content/30 font-medium">Tipo</div>
+              <div class="text-xs text-base-content/30 font-medium">Descrição</div>
+              <div class="text-xs text-base-content/30 font-medium">Data · Período</div>
+              <div></div>
+            </div>
+            <div id="events-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- CALENDAR CARD -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4 gap-4">
+            <div id="cal-legend" class="flex flex-wrap gap-3 pb-2 border-b border-base-100"></div>
+            <div id="calendar-weeks" class="space-y-6"></div>
+            <div class="flex flex-wrap gap-4 pt-2 border-t border-base-200 text-xs text-base-content/40">
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:#fecaca"></span>Voo</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:#fef08a"></span>Reserva</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:#bbf7d0"></span>Programação</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="screen-profile" class="hidden max-w-md mx-auto">
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div class="card-body gap-5">
+            <div class="flex items-center gap-4">
+              <div class="avatar placeholder"><div class="bg-primary text-primary-content rounded-full w-16 text-xl font-semibold"><span>YK</span></div></div>
+              <div>
+                <p class="font-semibold text-base">Você Kawaguchi</p>
+                <p class="text-sm text-base-content/50"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e58414d4b6e4b434f4742004d4143">[email&#160;protected]</a></p>
+                <button class="btn btn-ghost btn-xs mt-1 px-0 text-primary">Trocar foto</button>
+              </div>
+            </div>
+            <div class="divider my-0"></div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-base-content/40 font-medium mb-3">Informações</p>
+              <label class="form-control w-full"><div class="label py-1"><span class="label-text text-xs">Nome de exibição</span></div><input type="text" value="Você Kawaguchi" class="input input-bordered input-sm w-full" /></label>
+            </div>
+            <div class="divider my-0"></div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-base-content/40 font-medium mb-3">Segurança</p>
+              <div class="space-y-2">
+                <label class="form-control w-full"><div class="label py-1"><span class="label-text text-xs">Senha atual</span></div><input type="password" value="••••••••" class="input input-bordered input-sm w-full" /></label>
+                <label class="form-control w-full"><div class="label py-1"><span class="label-text text-xs">Nova senha</span></div><input type="password" placeholder="min. 8 caracteres" class="input input-bordered input-sm w-full" /></label>
+                <label class="form-control w-full"><div class="label py-1"><span class="label-text text-xs">Confirmar nova senha</span></div><input type="password" placeholder="repita a senha" class="input input-bordered input-sm w-full" /></label>
+              </div>
+            </div>
+            <div class="flex gap-2"><button class="btn btn-primary btn-sm">Salvar alterações</button><button class="btn btn-ghost btn-sm">Cancelar</button></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="drawer-side z-40">
+    <label for="drawer-toggle" class="drawer-overlay"></label>
+    <aside class="bg-base-100 border-r border-base-200 w-52 flex flex-col h-full">
+      <div class="p-4 border-b border-base-200">
+        <p class="font-serif font-semibold text-sm">Japão Set 2025</p>
+        <p class="text-xs text-base-content/40 mt-0.5">viagem do grupo</p>
+      </div>
+      <ul class="menu menu-sm p-2 flex-1 gap-0.5">
+        <li><a id="nav-feed" class="sidebar-active font-medium text-sm" onclick="switchScreen('feed')">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h8"/></svg>Feed
+        </a></li>
+        <li><a id="nav-calendar" class="text-sm" onclick="switchScreen('calendar')">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>Plano
+        </a></li>
+        <li><a id="nav-profile" class="text-sm" onclick="switchScreen('profile')">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Meu perfil
+        </a></li>
+      </ul>
+      <div class="p-3 border-t border-base-200">
+        <div class="flex items-center gap-2 cursor-pointer hover:bg-base-200 rounded-lg p-1.5 transition" onclick="switchScreen('profile')">
+          <div class="avatar placeholder"><div class="bg-primary text-primary-content rounded-full w-7 text-xs"><span>YK</span></div></div>
+          <div class="overflow-hidden">
+            <p class="text-xs font-medium truncate">Você Kawaguchi</p>
+            <p class="text-xs text-base-content/40 truncate"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="91e7fef2f4d1f4fcf0f8fdbff2fefc">[email&#160;protected]</a></p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- New Post Modal -->
+<dialog id="modal-post" class="modal">
+  <div class="modal-box w-full max-w-md">
+    <h3 class="font-serif font-semibold text-base mb-4">Novo post</h3>
+    <div class="tabs tabs-boxed bg-base-200 mb-4" id="post-type-tabs">
+      <a class="tab tab-active text-xs" onclick="setPostType('link',this)">Link</a>
+      <a class="tab text-xs" onclick="setPostType('image',this)">Imagem</a>
+      <a class="tab text-xs" onclick="setPostType('poll',this)">Enquete</a>
+    </div>
+    <div id="post-type-link">
+      <label class="form-control w-full mb-3"><div class="label py-1"><span class="label-text text-xs">URL do link</span></div><input type="url" placeholder="https://..." class="input input-bordered input-sm w-full" /></label>
+      <div class="border border-base-200 rounded-xl p-3 flex gap-3 mb-3"><div class="bg-info/20 rounded w-16 h-12 flex items-center justify-center text-xs text-info flex-shrink-0">thumb</div><div><p class="text-sm font-medium">Título extraído automaticamente</p><p class="text-xs text-base-content/50">Descrição do link</p></div></div>
+    </div>
+    <div id="post-type-image" class="hidden"><div class="border-2 border-dashed border-base-300 rounded-xl h-28 flex items-center justify-center text-xs text-base-content/40 mb-3 cursor-pointer hover:border-primary transition">Clique para enviar imagem</div></div>
+    <div id="post-type-poll" class="hidden mb-3">
+      <label class="form-control w-full mb-2"><div class="label py-1"><span class="label-text text-xs">Pergunta</span></div><input type="text" placeholder="Ex: Qual passeio você prefere?" class="input input-bordered input-sm w-full" /></label>
+      <div class="space-y-1.5"><input type="text" placeholder="Opção 1" class="input input-bordered input-xs w-full" /><input type="text" placeholder="Opção 2" class="input input-bordered input-xs w-full" /><input type="text" placeholder="Opção 3 (opcional)" class="input input-bordered input-xs w-full" /></div>
+    </div>
+    <label class="form-control w-full mb-4"><div class="label py-1"><span class="label-text text-xs">Descrição (opcional)</span></div><textarea class="textarea textarea-bordered textarea-sm w-full resize-none" rows="2" placeholder="Adicione um comentário..."></textarea></label>
+    <div class="modal-action mt-0"><form method="dialog" class="flex gap-2"><button class="btn btn-ghost btn-sm">Cancelar</button><button class="btn btn-primary btn-sm">Publicar</button></form></div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>fechar</button></form>
+</dialog>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── NAV ──────────────────────────────────────────────────────
+const SC = {
+  feed:     { title:'Feed da viagem',         primary:'+ Novo post' },
+  calendar: { title:'Plano da viagem',          primary:'+ Evento' },
+  profile:  { title:'Meu perfil',             primary:'Salvar' }
+};
+function switchScreen(id) {
+  ['feed','calendar','profile'].forEach(s => {
+    document.getElementById('screen-'+s).classList.add('hidden');
+    document.getElementById('nav-'+s).classList.remove('sidebar-active');
+  });
+  document.getElementById('screen-'+id).classList.remove('hidden');
+  document.getElementById('nav-'+id).classList.add('sidebar-active');
+  document.getElementById('topbar-title').textContent = SC[id].title;
+  document.getElementById('btn-primary').textContent  = SC[id].primary;
+  document.getElementById('drawer-toggle').checked = false;
+}
+function handlePrimary() {
+  if (document.getElementById('topbar-title').textContent.includes('Feed'))
+    document.getElementById('modal-post').showModal();
+}
+function setPostType(type, el) {
+  document.querySelectorAll('#post-type-tabs .tab').forEach(t => t.classList.remove('tab-active'));
+  el.classList.add('tab-active');
+  ['link','image','poll'].forEach(t => document.getElementById('post-type-'+t).classList.toggle('hidden', t!==type));
+}
+
+// ── CITIES BASE ───────────────────────────────────────────────
+let cities = [
+  { id:1, name:'Tóquio',   color:'#bfdbfe', arrDate:'2025-09-07', arrTime:'08:00', depDate:'2025-09-13', depTime:'07:00' },
+  { id:2, name:'Kyoto',    color:'#bbf7d0', arrDate:'2025-09-13', arrTime:'10:30', depDate:'2025-09-15', depTime:'09:00' },
+  { id:3, name:'Osaka',    color:'#fed7aa', arrDate:'2025-09-15', arrTime:'11:00', depDate:'2025-09-17', depTime:'10:00' },
+  { id:4, name:'Tóquio ②', color:'#ddd6fe', arrDate:'2025-09-17', arrTime:'14:00', depDate:'2025-09-19', depTime:'18:00' },
+];
+let nextId = 5;
+
+const TRIP_START = new Date('2025-09-06');
+const TRIP_END   = new Date('2025-09-19');
+const SLOTS      = ['manhã','tarde','noite'];
+const SLOT_MID   = { 'manhã':9, 'tarde':15, 'noite':21 };
+const SLOT_RANGE = { 'manhã':[6,11], 'tarde':[12,17], 'noite':[18,23] };
+
+// ── EVENTS (dynamic list) ────────────────────────────────────
+let events = [
+  { id:101, t:'flight', l:'Voo GRU→NRT',      date:'2025-09-06', slot:'manhã' },
+  { id:102, t:'res',    l:'Chegada Tóquio',    date:'2025-09-07', slot:'manhã' },
+  { id:103, t:'res',    l:'Check-in hotel',    date:'2025-09-07', slot:'tarde' },
+  { id:104, t:'prog',   l:'Descanso',          date:'2025-09-07', slot:'noite' },
+  { id:105, t:'prog',   l:'Shibuya',           date:'2025-09-08', slot:'manhã' },
+  { id:106, t:'prog',   l:'Meiji Jingu',       date:'2025-09-08', slot:'tarde' },
+  { id:107, t:'res',    l:'Ichiran',           date:'2025-09-08', slot:'noite' },
+  { id:108, t:'prog',   l:'Asakusa',           date:'2025-09-09', slot:'manhã' },
+  { id:109, t:'prog',   l:'Senso-ji',          date:'2025-09-09', slot:'tarde' },
+  { id:110, t:'prog',   l:'Akihabara',         date:'2025-09-10', slot:'manhã' },
+  { id:111, t:'res',    l:'TeamLab 15h',       date:'2025-09-10', slot:'tarde' },
+  { id:112, t:'res',    l:'Skytree',           date:'2025-09-10', slot:'noite' },
+  { id:113, t:'prog',   l:'Shinjuku',          date:'2025-09-11', slot:'manhã' },
+  { id:114, t:'prog',   l:'Yoyogi',            date:'2025-09-11', slot:'tarde' },
+  { id:115, t:'prog',   l:'Yanaka',            date:'2025-09-12', slot:'manhã' },
+  { id:116, t:'prog',   l:'Ueno',              date:'2025-09-12', slot:'tarde' },
+  { id:117, t:'res',    l:'Shinkansen→KYO',    date:'2025-09-13', slot:'manhã' },
+  { id:118, t:'res',    l:'Check-in Kyoto',    date:'2025-09-13', slot:'tarde' },
+  { id:119, t:'res',    l:'Kaiseki',           date:'2025-09-13', slot:'noite' },
+  { id:120, t:'prog',   l:'Fushimi Inari',     date:'2025-09-14', slot:'manhã' },
+  { id:121, t:'prog',   l:'Arashiyama',        date:'2025-09-14', slot:'tarde' },
+  { id:122, t:'prog',   l:'Nishiki Market',    date:'2025-09-15', slot:'manhã' },
+  { id:123, t:'res',    l:'Shinkansen→OSA',    date:'2025-09-15', slot:'tarde' },
+  { id:124, t:'res',    l:'Check-in Osaka',    date:'2025-09-15', slot:'noite' },
+  { id:125, t:'prog',   l:'Osaka livre',       date:'2025-09-16', slot:'manhã' },
+  { id:126, t:'prog',   l:'Dotonbori',         date:'2025-09-16', slot:'tarde' },
+  { id:127, t:'res',    l:'Takoyaki',          date:'2025-09-16', slot:'noite' },
+  { id:128, t:'prog',   l:'Nara (cervos!)',    date:'2025-09-17', slot:'manhã' },
+  { id:129, t:'res',    l:'Check-in Tóquio②', date:'2025-09-17', slot:'noite' },
+  { id:130, t:'res',    l:'Shinkansen→TYO',   date:'2025-09-18', slot:'manhã' },
+  { id:131, t:'prog',   l:'Compras/Duty',      date:'2025-09-18', slot:'tarde' },
+  { id:132, t:'res',    l:'Jantar despedida',  date:'2025-09-18', slot:'noite' },
+  { id:133, t:'flight', l:'Voo NRT→GRU',       date:'2025-09-19', slot:'manhã' },
+];
+let nextEvId = 200;
+
+const EV_LABEL = { flight:'Voo', res:'Reserva', prog:'Programação' };
+const EV_STYLE = {
+  flight:{ bg:'#fecaca', text:'#991b1b' },
+  res:   { bg:'#fef08a', text:'#854d0e' },
+  prog:  { bg:'#bbf7d0', text:'#166534' },
+};
+
+function getEventsForSlot(iso, slot) {
+  return events.filter(e => e.date === iso && e.slot === slot);
+}
+
+function renderEvents() {
+  const list = document.getElementById('events-list');
+  if (!list) return;
+  // Group by date for display
+  const sorted = [...events].sort((a,b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    const so = ['manhã','tarde','noite'];
+    return so.indexOf(a.slot) - so.indexOf(b.slot);
+  });
+  list.innerHTML = '';
+  const DN = { 'manhã':'manhã','tarde':'tarde','noite':'noite' };
+  const dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let lastDate = null;
+  sorted.forEach(ev => {
+    if (ev.date !== lastDate) {
+      const d = new Date(ev.date + 'T12:00:00');
+      const label = `${dayNames[d.getDay()]}, ${d.getDate()}/09`;
+      const sep = document.createElement('div');
+      sep.style.cssText = 'font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.07em;padding:4px 2px 2px;';
+      sep.textContent = label;
+      list.appendChild(sep);
+      lastDate = ev.date;
+    }
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr 90px auto;gap:8px;align-items:center;border-radius:8px;border:1px solid #f3f4f6;padding:6px 8px;background:#fafafa;';
+    const es = EV_STYLE[ev.t];
+    row.innerHTML = `
+      <select class="select select-bordered select-xs w-full" onchange="updateEvent(${ev.id},'t',this.value)">
+        <option value="prog" ${ev.t==='prog'?'selected':''}>Programação</option>
+        <option value="res"  ${ev.t==='res'?'selected':''}>Reserva</option>
+        <option value="flight" ${ev.t==='flight'?'selected':''}>Voo</option>
+      </select>
+      <input type="text" value="${ev.l}" class="input input-bordered input-xs w-full" oninput="updateEvent(${ev.id},'l',this.value)" />
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <input type="date" value="${ev.date}" class="input input-bordered input-xs w-full" onchange="updateEvent(${ev.id},'date',this.value)" />
+        <select class="select select-bordered select-xs w-full" onchange="updateEvent(${ev.id},'slot',this.value)">
+          <option value="manhã" ${ev.slot==='manhã'?'selected':''}>manhã</option>
+          <option value="tarde" ${ev.slot==='tarde'?'selected':''}>tarde</option>
+          <option value="noite" ${ev.slot==='noite'?'selected':''}>noite</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-xs text-error px-1" onclick="removeEvent(${ev.id})" title="Remover">✕</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateEvent(id, field, val) {
+  const e = events.find(x => x.id===id);
+  if (e) { e[field]=val; renderEvents(); renderCalendar(); }
+}
+function removeEvent(id) {
+  events = events.filter(e => e.id!==id);
+  renderEvents(); renderCalendar();
+}
+function addEvent() {
+  events.push({ id:nextEvId++, t:'prog', l:'Novo evento', date:'2025-09-07', slot:'manhã' });
+  renderEvents(); renderCalendar();
+}
+
+
+function dstr(d) { return d.toISOString().slice(0,10); }
+function addDays(d,n){ const r=new Date(d);r.setDate(r.getDate()+n);return r; }
+
+function darkenHex(hex, f=0.45) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.round(r*(1-f))},${Math.round(g*(1-f))},${Math.round(b*(1-f))})`;
+}
+
+function getCityForSlot(iso, slot) {
+  const mid = new Date(iso + 'T' + String(SLOT_MID[slot]).padStart(2,'0') + ':00');
+  for (const c of cities) {
+    const arr = new Date(c.arrDate + 'T' + c.arrTime);
+    const dep = new Date(c.depDate + 'T' + c.depTime);
+    if (mid >= arr && mid < dep) return c;
+  }
+  return null;
+}
+
+function isArrSlot(city, iso, slot) {
+  const [sh,eh] = SLOT_RANGE[slot];
+  const arr = new Date(city.arrDate + 'T' + city.arrTime);
+  return dstr(arr) === iso && arr.getHours() >= sh && arr.getHours() <= eh;
+}
+function isDepSlot(city, iso, slot) {
+  const [sh,eh] = SLOT_RANGE[slot];
+  const dep = new Date(city.depDate + 'T' + city.depTime);
+  return dstr(dep) === iso && dep.getHours() >= sh && dep.getHours() <= eh;
+}
+
+function renderCities() {
+  const list = document.getElementById('cities-list');
+  list.innerHTML = '';
+  cities.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'city-row rounded-lg border border-base-200 p-2 bg-base-50 hover:bg-base-100 transition';
+    row.innerHTML = `
+      <input type="color" value="${c.color}" title="Cor" onchange="updateCity(${c.id},'color',this.value)" />
+      <input type="text" value="${c.name}" placeholder="Nome da cidade" class="input input-bordered input-xs w-full" onchange="updateCity(${c.id},'name',this.value)" oninput="updateCity(${c.id},'name',this.value)" />
+      <div class="flex flex-col gap-1">
+        <input type="date" value="${c.arrDate}" class="input input-bordered input-xs w-full" onchange="updateCity(${c.id},'arrDate',this.value)" />
+        <input type="time" value="${c.arrTime}" class="input input-bordered input-xs w-full" onchange="updateCity(${c.id},'arrTime',this.value)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <input type="date" value="${c.depDate}" class="input input-bordered input-xs w-full" onchange="updateCity(${c.id},'depDate',this.value)" />
+        <input type="time" value="${c.depTime}" class="input input-bordered input-xs w-full" onchange="updateCity(${c.id},'depTime',this.value)" />
+      </div>
+      <button class="btn btn-ghost btn-xs text-error px-1" onclick="removeCity(${c.id})" title="Remover">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  renderLegend();
+  renderCalendar();
+  renderMap();
+}
+
+function renderLegend() {
+  document.getElementById('cal-legend').innerHTML = cities.map(c =>
+    `<span class="flex items-center gap-1.5 text-xs font-semibold" style="color:${darkenHex(c.color,0.5)}">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${c.color};border:1px solid rgba(0,0,0,0.08)"></span>
+      ${c.name}
+    </span>`
+  ).join('');
+}
+
+function renderCalendar() {
+  const container = document.getElementById('calendar-weeks');
+  container.innerHTML = '';
+  const days = [];
+  let d = new Date(TRIP_START);
+  while (d <= TRIP_END) { days.push(new Date(d)); d = addDays(d,1); }
+
+  const weeks = [];
+  for (let i=0;i<days.length;i+=7) weeks.push(days.slice(i,i+7));
+  const wLabels = ['Semana 1 — 6 a 12 de setembro','Semana 2 — 13 a 19 de setembro'];
+  const DN = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  weeks.forEach((wDays, wi) => {
+    const sec = document.createElement('div');
+    sec.innerHTML = `<p style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;font-weight:600;margin-bottom:8px;">${wLabels[wi]||'Semana '+(wi+1)}</p>`;
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'overflow-x:auto;border-radius:12px;border:1px solid #f3f4f6;';
+
+    const tbl = document.createElement('table');
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;min-width:520px;';
+
+    // thead
+    let th = '<thead><tr style="background:#f9fafb;">';
+    th += '<th style="width:50px;padding:6px 8px;"></th>';
+    wDays.forEach(day => {
+      const iso = dstr(day);
+      // dominant city for this day (use tarde as reference)
+      const dc = getCityForSlot(iso,'tarde') || getCityForSlot(iso,'manhã') || getCityForSlot(iso,'noite');
+      const bg = dc ? dc.color + '55' : 'transparent';
+      const bold = dc ? `color:${darkenHex(dc.color,0.55)};` : 'color:#374151;';
+      th += `<th style="padding:8px 4px;text-align:center;font-size:11px;font-weight:600;background:${bg};border-left:1px solid #f3f4f6;${bold}">${DN[day.getDay()]}<br/><span style="font-size:14px;">${day.getDate()}</span></th>`;
+    });
+    th += '</tr></thead>';
+    tbl.innerHTML = th;
+
+    const tbody = document.createElement('tbody');
+    SLOTS.forEach(slot => {
+      const tr = document.createElement('tr');
+      tr.style.borderTop = '1px solid #f3f4f6';
+
+      // time label
+      const tl = document.createElement('td');
+      tl.style.cssText = 'padding:6px 8px;font-size:10px;color:#9ca3af;font-weight:500;white-space:nowrap;background:#fafafa;vertical-align:middle;';
+      tl.textContent = slot;
+      tr.appendChild(tl);
+
+      wDays.forEach(day => {
+        const iso = dstr(day);
+        const city = getCityForSlot(iso, slot);
+        const evList = getEventsForSlot(iso, slot);
+        const td   = document.createElement('td');
+        td.style.cssText = 'padding:3px;vertical-align:top;border-left:1px solid #f3f4f6;min-width:78px;';
+
+        let inner = '';
+
+        if (city) {
+          const textColor = darkenHex(city.color, 0.52);
+          const arrSlot = isArrSlot(city, iso, slot);
+          const depSlot = isDepSlot(city, iso, slot);
+
+          let cellContent = '';
+          if (arrSlot) cellContent += `<div style="font-size:9px;opacity:0.65;font-style:italic;">↓ chega ${city.arrTime}</div>`;
+          if (!depSlot) cellContent += `<div style="font-size:10px;font-weight:700;margin-bottom:1px;">${city.name}</div>`;
+          if (depSlot)  cellContent += `<div style="font-size:9px;opacity:0.65;font-style:italic;">↑ sai ${city.depTime}</div>`;
+          evList.forEach(ev => {
+            const es = EV_STYLE[ev.t];
+            cellContent += `<div style="margin-top:2px;border-radius:4px;padding:2px 5px;font-size:9px;font-weight:600;background:${es.bg};color:${es.text}">${ev.l}</div>`;
+          });
+          inner = `<div style="background:${city.color};border-radius:7px;padding:5px 7px;min-height:34px;color:${textColor};">${cellContent}</div>`;
+        } else if (evList.length) {
+          const es = EV_STYLE[evList[0].t];
+          let cellContent = `<div style="font-size:10px;font-weight:600;">${evList[0].l}</div>`;
+          evList.slice(1).forEach(ev => {
+            const es2 = EV_STYLE[ev.t];
+            cellContent += `<div style="margin-top:2px;border-radius:4px;padding:2px 5px;font-size:9px;font-weight:600;background:${es2.bg};color:${es2.text}">${ev.l}</div>`;
+          });
+          inner = `<div style="border-radius:7px;padding:5px 7px;min-height:34px;background:${es.bg};color:${es.text};">${cellContent}</div>`;
+        } else {
+          inner = `<div style="min-height:34px;"></div>`;
+        }
+
+        td.innerHTML = inner;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    sec.appendChild(wrap);
+    container.appendChild(sec);
+  });
+}
+
+function updateCity(id, field, val) {
+  const c = cities.find(x => x.id===id);
+  if (c) { c[field]=val; renderLegend(); renderCalendar(); renderMap(); }
+}
+function removeCity(id) {
+  cities = cities.filter(c => c.id!==id);
+  renderCities();
+  renderMap();
+}
+function addCity() {
+  cities.push({ id:nextId++, name:'Nova cidade', color:'#e0e7ff', arrDate:'2025-09-06', arrTime:'10:00', depDate:'2025-09-07', depTime:'10:00' });
+  renderCities();
+  renderMap();
+}
+
+// ── MAP ───────────────────────────────────────────────────────
+// Known city coords for Japan cities (fallback geocoding)
+const CITY_COORDS = {
+  'tóquio':   [35.6762, 139.6503],
+  'tokyo':    [35.6762, 139.6503],
+  'toquio':   [35.6762, 139.6503],
+  'tóquio ②': [35.6762, 139.6503],
+  'toquio 2': [35.6762, 139.6503],
+  'kyoto':    [35.0116, 135.7681],
+  'quioto':   [35.0116, 135.7681],
+  'osaka':    [34.6937, 135.5023],
+  'nara':     [34.6851, 135.8048],
+  'hiroshima':[34.3853, 132.4553],
+  'sapporo':  [43.0618, 141.3545],
+  'fukuoka':  [33.5904, 130.4017],
+  'nagoya':   [35.1815, 136.9066],
+  'yokohama': [35.4437, 139.6380],
+  'kamakura': [35.3197, 139.5469],
+  'nikko':    [36.7198, 139.6983],
+  'hakone':   [35.2322, 139.1069],
+  'nagasaki': [32.7503, 129.8777],
+  'okinawa':  [26.2124, 127.6809],
+};
+
+let leafletMap = null;
+let mapMarkers = [];
+
+function getCoordsForCity(name) {
+  const key = name.toLowerCase().trim();
+  if (CITY_COORDS[key]) return CITY_COORDS[key];
+  // partial match
+  for (const [k,v] of Object.entries(CITY_COORDS)) {
+    if (key.includes(k) || k.includes(key.split(' ')[0])) return v;
+  }
+  return null;
+}
+
+function renderMap() {
+  if (!window.L) return;
+
+  if (!leafletMap) {
+    leafletMap = L.map('trip-map', { zoomControl: true, scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 18
+    }).addTo(leafletMap);
+  }
+
+  // Remove existing markers and polyline
+  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  mapMarkers = [];
+
+  const points = [];
+  const visited = new Set();
+
+  cities.forEach((city, idx) => {
+    const coords = getCoordsForCity(city.name);
+    if (!coords) return;
+
+    const key = coords.join(',');
+    const offset = visited.has(key) ? [0.008 * visited.size, 0.008 * visited.size] : [0, 0];
+    visited.add(key);
+    const pos = [coords[0] + offset[0], coords[1] + offset[1]];
+    points.push(pos);
+
+    // Custom colored circle marker
+    const marker = L.circleMarker(pos, {
+      radius: 14,
+      fillColor: city.color,
+      color: darkenHex(city.color, 0.4),
+      weight: 2.5,
+      opacity: 1,
+      fillOpacity: 0.95,
+    }).addTo(leafletMap);
+
+    // Number label via divIcon overlay
+    const label = L.marker(pos, {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:${darkenHex(city.color,0.55)};pointer-events:none;">${idx+1}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      })
+    }).addTo(leafletMap);
+
+    marker.bindTooltip(`<strong>${city.name}</strong><br/>Chegada: ${city.arrDate} ${city.arrTime}<br/>Saída: ${city.depDate} ${city.depTime}`, {
+      direction: 'top', offset: [0, -16], className: 'leaflet-city-tip'
+    });
+
+    mapMarkers.push(marker, label);
+  });
+
+  // Draw route polyline
+  if (points.length > 1) {
+    const line = L.polyline(points, {
+      color: '#94a3b8',
+      weight: 2,
+      dashArray: '6 5',
+      opacity: 0.7
+    }).addTo(leafletMap);
+    mapMarkers.push(line);
+  }
+
+  // Fit bounds
+  if (points.length === 1) {
+    leafletMap.setView(points[0], 10);
+  } else if (points.length > 1) {
+    leafletMap.fitBounds(L.latLngBounds(points), { padding: [32, 32] });
+  } else {
+    leafletMap.setView([36.2048, 138.2529], 5);
+  }
+
+  setTimeout(() => leafletMap.invalidateSize(), 100);
+}
+
+renderCities();
+renderEvents();
+renderMap();
+</script>
+</body>
+</html>
