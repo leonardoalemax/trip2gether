@@ -56,7 +56,7 @@ export function useCalendarWeeks(
 		const daysBefore = Math.ceil(missingDays / 2);
 		const daysAfter = Math.floor(missingDays / 2);
 
-		for (let i = daysBefore; i >= 1; i -= 1) {
+		for (let i = 1; i <= daysBefore; i += 1) {
 			days.unshift(addDays(startDate, -i));
 		}
 
@@ -71,5 +71,5 @@ export function useCalendarWeeks(
 		return groupedWeeks;
 	}, [startDate, endDate]);
 
-	return { weeks };
+	return { weeks, startDate, endDate };
 }

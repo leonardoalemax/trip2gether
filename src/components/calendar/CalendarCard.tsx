@@ -33,7 +33,10 @@ export default function CalendarCard() {
 		reservationMomentsBySlot,
 		reservationColorByDateSlot,
 	} = useReservationMoments(reservations, selectedTimezone);
-	const { weeks } = useCalendarWeeks(ticketMoments, reservationMoments);
+	const { weeks, startDate, endDate } = useCalendarWeeks(
+		ticketMoments,
+		reservationMoments,
+	);
 	const [selectedDayIso, setSelectedDayIso] = React.useState<string | null>(
 		null,
 	);
@@ -108,6 +111,8 @@ export default function CalendarCard() {
 									key={wi}
 									weekDays={wDays}
 									weekIndex={wi}
+									tripStart={startDate ?? undefined}
+									tripEnd={endDate ?? undefined}
 									ticketMomentsBySlot={ticketMomentsBySlot}
 									reservationMomentsBySlot={
 										reservationMomentsBySlot

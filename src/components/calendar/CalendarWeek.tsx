@@ -9,6 +9,8 @@ import { darkenHex } from "./utils/styleUtils";
 interface CalendarWeekProps {
 	weekDays: Date[];
 	weekIndex: number;
+	tripStart?: Date | undefined;
+	tripEnd?: Date | undefined;
 	ticketMomentsBySlot: Map<string, TicketMoment[]>;
 	reservationMomentsBySlot: Map<string, ReservationMoment[]>;
 	reservationColorByDateSlot: Map<string, string>;
@@ -18,6 +20,8 @@ interface CalendarWeekProps {
 export default function CalendarWeek({
 	weekDays,
 	weekIndex,
+	tripStart,
+	tripEnd,
 	ticketMomentsBySlot,
 	reservationMomentsBySlot,
 	reservationColorByDateSlot,
@@ -39,6 +43,10 @@ export default function CalendarWeek({
 			<div className='md:hidden space-y-2'>
 				{weekDays.map((day) => {
 					const iso = dstr(day);
+					const isPadding =
+						(tripStart && day < tripStart) ||
+						(tripEnd && day > tripEnd);
+					if (isPadding) return null;
 					return (
 						<div
 							key={iso}
