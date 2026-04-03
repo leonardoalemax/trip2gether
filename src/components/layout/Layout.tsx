@@ -22,6 +22,31 @@ export default function Layout({
 				activeScreen={activeScreen}
 				onScreenChange={onScreenChange}
 			/>
+			{/* Subheader de navegação — apenas desktop */}
+			<div className='hidden md:block border-b border-base-200 bg-base-100/95 backdrop-blur supports-backdrop-filter:bg-base-100/80'>
+				<nav className='px-4 lg:px-6'>
+					<ul className='menu menu-horizontal p-0 gap-1 flex-nowrap'>
+						{LAYOUT_NAV_ITEMS.map((item) => (
+							<li key={item.id}>
+								<a
+									className={`text-sm rounded-none border-b-2 py-2.5 px-3 transition-colors ${
+										activeScreen === item.id
+											? "border-primary text-primary font-semibold"
+											: "border-transparent text-base-content/60 hover:text-base-content"
+									}`}
+									style={{ cursor: "pointer" }}
+									onClick={() => onScreenChange(item.id)}>
+									<AppIcon
+										name={item.icon}
+										className='h-4 w-4'
+									/>
+									{item.label}
+								</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</div>
 			<main className='flex-1 overflow-y-auto px-4 lg:px-6 pb-24 md:pb-6 pt-0'>
 				{children}
 			</main>

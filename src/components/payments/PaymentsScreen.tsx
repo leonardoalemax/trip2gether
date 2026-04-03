@@ -270,13 +270,20 @@ const PaymentsScreen: React.FC = () => {
 												Data
 											</p>
 											<p className='text-sm font-semibold text-base-content'>
-												{report.paymentDueDate
-													? new Date(
-															report.paymentDueDate,
-														).toLocaleDateString(
-															"pt-BR",
-														)
-													: "Sem data"}
+												{(() => {
+													const dateStr =
+														report.paymentType ===
+														"pagar_na_hora"
+															? report.checkInDate
+															: report.paymentDueDate;
+													return dateStr
+														? new Date(
+																dateStr,
+															).toLocaleDateString(
+																"pt-BR",
+															)
+														: "Sem data";
+												})()}
 											</p>
 										</div>
 										<div>

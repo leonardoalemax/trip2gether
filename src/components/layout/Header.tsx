@@ -2,9 +2,7 @@ import { ScreenType } from "../../types";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../../firebase";
 import { signOut } from "firebase/auth";
-import NavItem from "./children/NavItem";
 import TripSelector from "../trips/Selector/TripSelector";
-import { LAYOUT_NAV_ITEMS } from "./navItems";
 
 interface HeaderProps {
 	activeScreen: ScreenType;
@@ -31,24 +29,9 @@ export default function Header({ activeScreen, onScreenChange }: HeaderProps) {
 		<header className='relative z-40 border-b border-base-200 bg-base-100/95 backdrop-blur supports-backdrop-filter:bg-base-100/80'>
 			<div className='px-4 lg:px-6 py-3'>
 				<div className='hidden md:flex items-center gap-3'>
-					<div className='w-full max-w-md'>
+					<div className='flex-1 min-w-0'>
 						<TripSelector variant='desktop-inline' />
 					</div>
-
-					<nav className='flex-1 min-w-0'>
-						<ul className='menu menu-horizontal rounded-lg bg-base-200/60 p-1 w-full overflow-x-auto flex-nowrap gap-1'>
-							{LAYOUT_NAV_ITEMS.map((item) => (
-								<NavItem
-									key={item.id}
-									id={item.id}
-									label={item.label}
-									icon={item.icon}
-									isActive={activeScreen === item.id}
-									onClick={onScreenChange}
-								/>
-							))}
-						</ul>
-					</nav>
 
 					<div className='dropdown dropdown-end'>
 						<button
