@@ -1,7 +1,6 @@
 import React from "react";
 import { ScreenType } from "../../types";
 import Header from "./Header";
-import AppIcon from "../Icons/AppIcon";
 import { LAYOUT_NAV_ITEMS } from "./navItems";
 
 interface LayoutProps {
@@ -36,10 +35,9 @@ export default function Layout({
 									}`}
 									style={{ cursor: "pointer" }}
 									onClick={() => onScreenChange(item.id)}>
-									<AppIcon
-										name={item.icon}
-										className='h-4 w-4'
-									/>
+									<span className='text-base leading-none'>
+										{item.emoji}
+									</span>
 									{item.label}
 								</a>
 							</li>
@@ -63,10 +61,9 @@ export default function Layout({
 									? "bg-primary/15 text-primary"
 									: "text-base-content/60"
 							}`}>
-							<AppIcon
-								name={item.icon}
-								className='h-5 w-5 shrink-0'
-							/>
+							<span className='text-xl leading-none'>
+								{item.emoji}
+							</span>
 							<span className='text-[10px] leading-none font-medium truncate w-full text-center px-0.5'>
 								{item.label}
 							</span>
