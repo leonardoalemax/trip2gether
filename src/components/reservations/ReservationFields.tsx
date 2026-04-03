@@ -178,6 +178,28 @@ const ReservationFields: React.FC<ReservationFieldsProps> = ({
 						<div className='form-control md:col-span-2'>
 							<label className='label py-1 px-0'>
 								<span className='label-text text-xs font-semibold text-base-content/70'>
+									Sinal
+								</span>
+							</label>
+							<input
+								type='text'
+								placeholder='Ex: R$ 200,00'
+								value={values.signalAmount || ""}
+								onBlur={(e) =>
+									onBlur?.("signalAmount", e.target.value)
+								}
+								onChange={(e) =>
+									onChange("signalAmount", e.target.value)
+								}
+								className='input input-bordered input-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30'
+							/>
+						</div>
+					)}
+
+					{values.paymentType === "pago_pelo_reservante" && (
+						<div className='form-control md:col-span-2'>
+							<label className='label py-1 px-0'>
+								<span className='label-text text-xs font-semibold text-base-content/70'>
 									Data de Vencimento
 								</span>
 							</label>

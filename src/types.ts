@@ -42,6 +42,7 @@ export interface Reservation {
 	hotelName: string;
 	hotelAddress: string;
 	reservationValue: string;
+	signalAmount?: string;
 	reservedByEmail: string;
 	paymentType: PaymentType;
 	paymentDueDate?: string;
@@ -59,8 +60,15 @@ export interface Reservation {
 
 export type DraftReservation = Omit<
 	Reservation,
-	"id" | "tripId" | "createdAt" | "createdByUserId" | "createdByEmail"
->;
+	| "id"
+	| "tripId"
+	| "createdAt"
+	| "createdByUserId"
+	| "createdByEmail"
+	| "paymentType"
+> & {
+	paymentType: PaymentType | "";
+};
 
 export interface TripInvite {
 	id: string;

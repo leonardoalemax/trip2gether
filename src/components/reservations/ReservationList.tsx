@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Reservation, DraftReservation } from "../../types";
 import ReservationFields from "./ReservationFields";
 
@@ -31,6 +31,18 @@ const ReservationList: React.FC<ReservationListProps> = ({
 	setReservations,
 	tripMembers = [],
 }) => {
+	const [expandedReservationIds, setExpandedReservationIds] = useState<
+		string[]
+	>([]);
+
+	const toggleExpanded = (reservationId: string) => {
+		setExpandedReservationIds((prev) =>
+			prev.includes(reservationId)
+				? prev.filter((id) => id !== reservationId)
+				: [...prev, reservationId],
+		);
+	};
+
 	return (
 		<div className='space-y-4 w-full'>
 			{reservations.map((reservation, i) =>
@@ -38,6 +50,9 @@ const ReservationList: React.FC<ReservationListProps> = ({
 					const baseColor = isHexColor(reservation.color)
 						? reservation.color
 						: "#bfdbfe";
+					const isExpanded = expandedReservationIds.includes(
+						reservation.id,
+					);
 
 					return (
 						<div
@@ -107,6 +122,14 @@ const ReservationList: React.FC<ReservationListProps> = ({
 									)}
 									{reservation.paymentType ===
 										"pago_pelo_reservante" &&
+										reservation.signalAmount && (
+											<p className='text-xs text-base-content/70'>
+												💸 Sinal:{" "}
+												{reservation.signalAmount}
+											</p>
+										)}
+									{reservation.paymentType ===
+										"pago_pelo_reservante" &&
 										reservation.paymentDueDate && (
 											<p className='text-xs text-base-content/70'>
 												📅 Vencimento:{" "}
@@ -122,52 +145,87 @@ const ReservationList: React.FC<ReservationListProps> = ({
 										</p>
 									)}
 								</div>
-								<button
-									aria-label='Remover reserva'
-									className='btn btn-ghost btn-xs btn-square text-error'
-									onClick={() =>
-										handleDelete(reservation.id)
-									}>
-									<svg
-										xmlns='http://www.w3.org/2000/svg'
-										className='h-4 w-4'
-										fill='none'
-										viewBox='0 0 24 24'
-										stroke='currentColor'>
-										<path
-											strokeLinecap='round'
-											strokeLinejoin='round'
+								<div className='flex items-center gap-1'>
+									<button
+										type='button'
+										className='btn btn-ghost btn-xs btn-square'
+										aria-label={
+											isExpanded ? "Recolher" : "Expandir"
+										}
+										onClick={() =>
+											toggleExpanded(reservation.id)
+										}>
+										<svg
+											xmlns='http://www.w3.org/2000/svg'
+											className='size-4'
+											viewBox='0 0 24 24'
+											fill='none'
+											stroke='currentColor'
 											strokeWidth='2'
-											d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M3 7h18'
-										/>
-									</svg>
-								</button>
+											strokeLinecap='round'
+											strokeLinejoin='round'>
+											{isExpanded ? (
+												<polyline points='18 15 12 9 6 15' />
+											) : (
+												<polyline points='6 9 12 15 18 9' />
+											)}
+										</svg>
+									</button>
+									<button
+										aria-label='Remover reserva'
+										className='btn btn-ghost btn-xs btn-square text-error'
+										onClick={() =>
+											handleDelete(reservation.id)
+										}>
+										<svg
+											xmlns='http://www.w3.org/2000/svg'
+											className='h-4 w-4'
+											fill='none'
+											viewBox='0 0 24 24'
+											stroke='currentColor'>
+											<path
+												strokeLinecap='round'
+												strokeLinejoin='round'
+												strokeWidth='2'
+												d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M3 7h18'
+											/>
+										</svg>
+									</button>
+								</div>
 							</div>
-							<div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
-								<ReservationFields
-									values={reservation}
-									onChange={(field, value) =>
-										setReservations((prev) =>
-											prev.map((r) =>
-												r.id === reservation.id
-													? ({
-															...r,
-															[field]: value,
-														} as Reservation)
-													: r,
-											),
-										)
-									}
-									onBlur={(field, value) =>
-										handleFieldUpdate(
-											reservation,
-											field,
-											value,
-										)
-									}
-									tripMembers={tripMembers}
-								/>
-							</div>
+							{isExpanded && (
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+									<ReservationFields
+										values={reservation}
+										onChange={(
+											field: keyof DraftReservation,
+											value: string,
+										) =>
+											setReservations((prev) =>
+												prev.map((r) =>
+													r.id === reservation.id
+														? ({
+																...r,
+																[field]: value,
+															} as Reservation)
+														: r,
+												),
+											)
+										}
+										onBlur={(
+											field: keyof DraftReservation,
+											value: string,
+										) =>
+											handleFieldUpdate(
+												reservation,
+												field,
+												value,
+											)
+										}
+										tripMembers={tripMembers}
+									/>
+								</div>
+							)}
 						</div>
 					);
 				})(),

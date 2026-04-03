@@ -9,12 +9,21 @@ interface PaymentReport {
 	city: string;
 	reservedByEmail: string;
 	payTo: string;
-	paymentDueDate?: string;
+	paymentDueDate: string | undefined;
 	totalValue: number;
+	signalValue: number;
+	balanceDueValue: number;
 	numberOfTravelers: number;
 	perTravelerAmount: number;
+	signalPerTravelerAmount: number;
+	balancePerTravelerAmount: number;
 	paymentType: string;
 }
+
+const parseMoneyValue = (value?: string): number => {
+	if (!value) return 0;
+	return parseFloat(value.replace(/[^0-9.,]/g, "").replace(",", ".")) || 0;
+};
 
 const PaymentsScreen: React.FC = () => {
 	const { activeTrip } = useTripContext();
@@ -49,13 +58,13 @@ const PaymentsScreen: React.FC = () => {
 
 		// Calcular relatório por reserva
 		const reports: PaymentReport[] = reservations.map((r) => {
-			const value =
-				parseFloat(
-					r.reservationValue
-						.replace(/[^0-9.,]/g, "")
-						.replace(",", "."),
-				) || 0;
+			const value = parseMoneyValue(r.reservationValue);
+			const signalValue = parseMoneyValue(r.signalAmount);
+			const balanceDueValue = Math.max(value - signalValue, 0);
 			const perTraveler = value / numberOfTravelers;
+			const signalPerTravelerAmount = signalValue / numberOfTravelers;
+			const balancePerTravelerAmount =
+				balanceDueValue / numberOfTravelers;
 			const hotelName = r.hotelName || "Hotel não informado";
 			const reservedByEmail =
 				r.reservedByEmail || "Reservante não informado";
@@ -72,8 +81,12 @@ const PaymentsScreen: React.FC = () => {
 				payTo,
 				paymentDueDate: r.paymentDueDate,
 				totalValue: value,
+				signalValue,
+				balanceDueValue,
 				numberOfTravelers,
 				perTravelerAmount: perTraveler,
+				signalPerTravelerAmount,
+				balancePerTravelerAmount,
 				paymentType: r.paymentType,
 			};
 		});
@@ -107,10 +120,16 @@ const PaymentsScreen: React.FC = () => {
 		);
 	}
 
+	const travelersCount = activeTrip.travelers || 1;
+
 	// Calcular totais
 	const totalValue = paymentReports.reduce((sum, r) => sum + r.totalValue, 0);
+	const totalSignal = paymentReports.reduce(
+		(sum, r) => sum + r.signalValue,
+		0,
+	);
 	const totalPerTraveler = paymentReports.reduce(
-		(sum, r) => sum + r.perTravelerAmount,
+		(sum, r) => sum + r.balancePerTravelerAmount,
 		0,
 	);
 
@@ -121,13 +140,13 @@ const PaymentsScreen: React.FC = () => {
 					💰 Relatório de Pagamentos
 				</h2>
 				<p className='text-sm text-base-content/60'>
-					Divisão de custos entre {activeTrip.travelers} viajantes
+					Divisão de custos entre {travelersCount} viajantes
 				</p>
 			</div>
 
 			{/* Resumo Total */}
 			<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-				<div className='card bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20'>
+				<div className='card bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20'>
 					<div className='card-body p-4'>
 						<p className='text-sm text-base-content/70'>
 							Total de Reservas
@@ -138,7 +157,7 @@ const PaymentsScreen: React.FC = () => {
 					</div>
 				</div>
 
-				<div className='card bg-gradient-to-br from-success/10 to-success/5 border border-success/20'>
+				<div className='card bg-linear-to-br from-success/10 to-success/5 border border-success/20'>
 					<div className='card-body p-4'>
 						<p className='text-sm text-base-content/70'>
 							Valor Total
@@ -146,10 +165,13 @@ const PaymentsScreen: React.FC = () => {
 						<p className='text-2xl font-bold text-success'>
 							R$ {totalValue.toFixed(2)}
 						</p>
+						<p className='text-xs text-base-content/60 mt-1'>
+							Sinal: R$ {totalSignal.toFixed(2)}
+						</p>
 					</div>
 				</div>
 
-				<div className='card bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20'>
+				<div className='card bg-linear-to-br from-accent/10 to-accent/5 border border-accent/20'>
 					<div className='card-body p-4'>
 						<p className='text-sm text-base-content/70'>
 							Por Viajante Total
@@ -198,48 +220,100 @@ const PaymentsScreen: React.FC = () => {
 												{report.payTo}
 											</span>
 										</p>
-										{report.paymentDueDate && (
-											<p className='text-xs text-orange-600 font-semibold mt-1.5'>
-												📅 Data de Vencimento:{" "}
-												{new Date(
-													report.paymentDueDate,
-												).toLocaleDateString("pt-BR")}
-											</p>
-										)}
 									</div>
 								</div>
 
 								<div className='divider my-2' />
 
-								<div className='grid grid-cols-3 gap-3'>
-									<div className='text-center p-2 bg-base-200/50 rounded-lg'>
-										<p className='text-xs text-base-content/60 mb-1'>
-											Valor Total
-										</p>
-										<p className='text-lg font-bold text-base-content'>
-											R$ {report.totalValue.toFixed(2)}
-										</p>
-									</div>
+								<div className='space-y-2'>
+									{report.signalValue > 0 && (
+										<div className='grid grid-cols-1 md:grid-cols-5 gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20'>
+											<div className='md:col-span-2'>
+												<p className='text-xs text-base-content/60'>
+													Linha
+												</p>
+												<p className='text-sm font-semibold text-base-content'>
+													Sinal
+												</p>
+											</div>
+											<div>
+												<p className='text-xs text-base-content/60'>
+													Data
+												</p>
+												<p className='text-sm font-semibold text-base-content'>
+													Ja vencido
+												</p>
+											</div>
+											<div>
+												<p className='text-xs text-base-content/60'>
+													Total
+												</p>
+												<p className='text-sm font-semibold text-base-content'>
+													R${" "}
+													{report.signalValue.toFixed(
+														2,
+													)}
+												</p>
+											</div>
+											<div>
+												<p className='text-xs text-base-content/60'>
+													Por viajante
+												</p>
+												<p className='text-sm font-bold text-primary'>
+													R${" "}
+													{report.signalPerTravelerAmount.toFixed(
+														2,
+													)}
+												</p>
+											</div>
+										</div>
+									)}
 
-									<div className='text-center p-2 bg-base-200/50 rounded-lg flex flex-col justify-center'>
-										<p className='text-xs text-base-content/60'>
-											÷
-										</p>
-										<p className='text-lg font-bold text-base-content'>
-											{report.numberOfTravelers}
-										</p>
-									</div>
-
-									<div className='text-center p-2 bg-primary/10 rounded-lg'>
-										<p className='text-xs text-base-content/60 mb-1'>
-											Por Viajante
-										</p>
-										<p className='text-lg font-bold text-primary'>
-											R${" "}
-											{report.perTravelerAmount.toFixed(
-												2,
-											)}
-										</p>
+									<div className='grid grid-cols-1 md:grid-cols-5 gap-2 p-3 rounded-lg bg-base-200/40'>
+										<div className='md:col-span-2'>
+											<p className='text-xs text-base-content/60'>
+												Linha
+											</p>
+											<p className='text-sm font-semibold text-base-content'>
+												Pagamento do vencimento
+											</p>
+										</div>
+										<div>
+											<p className='text-xs text-base-content/60'>
+												Data
+											</p>
+											<p className='text-sm font-semibold text-base-content'>
+												{report.paymentDueDate
+													? new Date(
+															report.paymentDueDate,
+														).toLocaleDateString(
+															"pt-BR",
+														)
+													: "Sem data"}
+											</p>
+										</div>
+										<div>
+											<p className='text-xs text-base-content/60'>
+												Saldo
+											</p>
+											<p className='text-sm font-semibold text-base-content'>
+												R${" "}
+												{report.balanceDueValue.toFixed(
+													2,
+												)}
+											</p>
+										</div>
+										<div>
+											<p className='text-xs text-base-content/60'>
+												Por viajante
+											</p>
+											<p className='text-sm font-bold text-primary'>
+												R${" "}
+												{report.balancePerTravelerAmount.toFixed(
+													2,
+												)}
+											</p>
+										</div>
 									</div>
 								</div>
 							</div>

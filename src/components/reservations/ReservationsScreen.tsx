@@ -17,6 +17,7 @@ const emptyDraft = (): DraftReservation => ({
 	hotelName: "",
 	hotelAddress: "",
 	reservationValue: "",
+	signalAmount: "",
 	reservedByEmail: "",
 	paymentType: "",
 	color: "#bfdbfe",
@@ -59,7 +60,10 @@ const ReservationsScreen: React.FC = () => {
 				createdByUserId: user.uid,
 				createdByEmail: user.email || "",
 			};
-			const reservation = await createReservation(activeTrip.id, reservationData as Reservation);
+			const reservation = await createReservation(
+				activeTrip.id,
+				reservationData as Reservation,
+			);
 			setReservations((prev) => [...prev, reservation]);
 			setDraft(null);
 		} finally {
@@ -141,7 +145,6 @@ const ReservationsScreen: React.FC = () => {
 				handleDelete={handleDelete}
 				setReservations={setReservations}
 				tripMembers={tripMembers}
-				setReservations={setReservations}
 			/>
 		</div>
 	);
