@@ -10,6 +10,7 @@ interface PaymentReport {
 	reservedByEmail: string;
 	payTo: string;
 	paymentDueDate: string | undefined;
+	checkInDate: string | undefined;
 	totalValue: number;
 	signalValue: number;
 	balanceDueValue: number;
@@ -80,6 +81,7 @@ const PaymentsScreen: React.FC = () => {
 				reservedByEmail,
 				payTo,
 				paymentDueDate: r.paymentDueDate,
+				checkInDate: r.checkInDate,
 				totalValue: value,
 				signalValue,
 				balanceDueValue,
@@ -123,9 +125,8 @@ const PaymentsScreen: React.FC = () => {
 	const travelersCount = activeTrip.travelers || 1;
 
 	// Calcular totais
-	const totalValue = paymentReports.reduce((sum, r) => sum + r.totalValue, 0);
-	const totalSignal = paymentReports.reduce(
-		(sum, r) => sum + r.signalValue,
+	const totalValue = paymentReports.reduce(
+		(sum, r) => sum + r.balanceDueValue,
 		0,
 	);
 	const totalPerTraveler = paymentReports.reduce(
@@ -145,28 +146,14 @@ const PaymentsScreen: React.FC = () => {
 			</div>
 
 			{/* Resumo Total */}
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-				<div className='card bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20'>
-					<div className='card-body p-4'>
-						<p className='text-sm text-base-content/70'>
-							Total de Reservas
-						</p>
-						<p className='text-2xl font-bold text-primary'>
-							{paymentReports.length}
-						</p>
-					</div>
-				</div>
-
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 				<div className='card bg-linear-to-br from-success/10 to-success/5 border border-success/20'>
 					<div className='card-body p-4'>
 						<p className='text-sm text-base-content/70'>
-							Valor Total
+							Valor Total a Pagar
 						</p>
 						<p className='text-2xl font-bold text-success'>
 							R$ {totalValue.toFixed(2)}
-						</p>
-						<p className='text-xs text-base-content/60 mt-1'>
-							Sinal: R$ {totalSignal.toFixed(2)}
 						</p>
 					</div>
 				</div>

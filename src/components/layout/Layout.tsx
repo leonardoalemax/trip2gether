@@ -26,19 +26,25 @@ export default function Layout({
 				{children}
 			</main>
 			<footer className='md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-base-200 bg-base-100/95 backdrop-blur supports-backdrop-filter:bg-base-100/80'>
-				<nav className='grid grid-cols-3 gap-1 p-2'>
+				<nav className='grid grid-cols-4 p-1'>
 					{LAYOUT_NAV_ITEMS.map((item) => (
 						<button
 							key={item.id}
 							type='button'
 							onClick={() => onScreenChange(item.id)}
 							aria-label={item.label}
-							className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
+							className={`py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-colors ${
 								activeScreen === item.id
 									? "bg-primary/15 text-primary"
 									: "text-base-content/60"
 							}`}>
-							<AppIcon name={item.icon} className='h-5 w-5' />
+							<AppIcon
+								name={item.icon}
+								className='h-5 w-5 shrink-0'
+							/>
+							<span className='text-[10px] leading-none font-medium truncate w-full text-center px-0.5'>
+								{item.label}
+							</span>
 						</button>
 					))}
 				</nav>
