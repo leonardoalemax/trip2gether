@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../../firebase";
 import { useTripContext } from "../../context/TripContext";
 import {
 	createReservation,
@@ -13,6 +15,10 @@ import ReservationList from "./ReservationList";
 const emptyDraft = (): DraftReservation => ({
 	city: "",
 	hotelName: "",
+	hotelAddress: "",
+	reservationValue: "",
+	reservedByEmail: "",
+	paymentType: "",
 	color: "#bfdbfe",
 	timezone: "",
 	checkInDate: "",
@@ -23,6 +29,7 @@ const emptyDraft = (): DraftReservation => ({
 
 const ReservationsScreen: React.FC = () => {
 	const { activeTrip } = useTripContext();
+	const [user] = useAuthState(auth);
 	const [reservations, setReservations] = useState<Reservation[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -44,10 +51,15 @@ const ReservationsScreen: React.FC = () => {
 	}, [fetchReservations]);
 
 	const handleAdd = async () => {
-		if (!activeTrip || !draft) return;
+		if (!activeTrip || !draft || !user) return;
 		setSaving(true);
 		try {
-			const reservation = await createReservation(activeTrip.id, draft);
+			const reservationData = {
+				...draft,
+				createdByUserId: user.uid,
+				createdByEmail: user.email || "",
+			};
+			const reservation = await createReservation(activeTrip.id, reservationData as Reservation);
 			setReservations((prev) => [...prev, reservation]);
 			setDraft(null);
 		} finally {
@@ -85,6 +97,11 @@ const ReservationsScreen: React.FC = () => {
 		);
 	}
 
+	const tripMembers = [
+		activeTrip.ownerEmail,
+		...activeTrip.whitelistedEmails,
+	].filter((email) => email);
+
 	return (
 		<div className='p-4 space-y-4 max-w-2xl mx-auto'>
 			<div className='flex items-center justify-between'>
@@ -115,12 +132,15 @@ const ReservationsScreen: React.FC = () => {
 				setDraft={setDraft}
 				handleAdd={handleAdd}
 				saving={saving}
+				tripMembers={tripMembers}
 			/>
 
 			<ReservationList
 				reservations={reservations}
 				handleFieldUpdate={handleFieldUpdate}
 				handleDelete={handleDelete}
+				setReservations={setReservations}
+				tripMembers={tripMembers}
 				setReservations={setReservations}
 			/>
 		</div>

@@ -5,6 +5,7 @@ import Layout from "./components/layout/Layout";
 import CalendarViewScreen from "./components/calendar/CalendarViewScreen";
 import TicketsScreen from "./components/tickets/TicketsScreen";
 import ReservationsScreen from "./components/reservations/ReservationsScreen";
+import PaymentsScreen from "./components/payments/PaymentsScreen";
 import EditTripModal from "./components/trips/EditTripModal";
 
 function Dashboard() {
@@ -23,6 +24,7 @@ function Dashboard() {
 				{activeScreen === "calendar" && <CalendarViewScreen />}
 				{activeScreen === "tickets" && <TicketsScreen />}
 				{activeScreen === "reservations" && <ReservationsScreen />}
+				{activeScreen === "payments" && <PaymentsScreen />}
 			</Layout>
 			<EditTripModal id='modal-edit-trip' />
 		</TripProvider>

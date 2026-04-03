@@ -5,6 +5,7 @@ import EditIcon from "./icons/EditIcon";
 import ReservationsIcon from "./icons/ReservationsIcon";
 import SwitchIcon from "./icons/SwitchIcon";
 import TicketsIcon from "./icons/TicketsIcon";
+import PaymentsIcon from "./icons/PaymentsIcon";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -12,6 +13,7 @@ const ICONS = {
 	calendar: CalendarIcon,
 	tickets: TicketsIcon,
 	reservations: ReservationsIcon,
+	payments: PaymentsIcon,
 	edit: EditIcon,
 	add: AddIcon,
 	switch: SwitchIcon,

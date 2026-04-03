@@ -21,6 +21,7 @@ interface ReservationListProps {
 	) => void;
 	handleDelete: (reservationId: string) => void;
 	setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
+	tripMembers?: string[];
 }
 
 const ReservationList: React.FC<ReservationListProps> = ({
@@ -28,6 +29,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
 	handleFieldUpdate,
 	handleDelete,
 	setReservations,
+	tripMembers = [],
 }) => {
 	return (
 		<div className='space-y-4 w-full'>
@@ -62,10 +64,63 @@ const ReservationList: React.FC<ReservationListProps> = ({
 										{reservation.hotelName ||
 											"Hotel ainda não informado"}
 									</p>
+									{reservation.hotelAddress && (
+										<p className='text-xs text-base-content/60'>
+											📍 {reservation.hotelAddress}
+										</p>
+									)}{" "}
+									{reservation.reservationLink && (
+										<p className='text-xs text-primary/80 hover:text-primary'>
+											<a
+												href={
+													reservation.reservationLink
+												}
+												target='_blank'
+												rel='noopener noreferrer'
+												className='underline'>
+												🔗 Ver reserva
+											</a>
+										</p>
+									)}{" "}
 									<p className='text-xs text-base-content/70'>
 										{reservation.city ||
 											"Cidade não informada"}
 									</p>
+									{reservation.reservationValue && (
+										<p className='text-xs font-semibold text-base-content/80'>
+											💰 {reservation.reservationValue}
+										</p>
+									)}
+									{reservation.reservedByEmail && (
+										<p className='text-xs text-base-content/70'>
+											👤 Reservado por:{" "}
+											{reservation.reservedByEmail}
+										</p>
+									)}
+									{reservation.paymentType && (
+										<p className='text-xs text-base-content/70'>
+											{reservation.paymentType ===
+											"pagar_na_hora"
+												? "💳 Pagar na hora"
+												: "✅ Pago pelo reservante"}
+										</p>
+									)}
+									{reservation.paymentType ===
+										"pago_pelo_reservante" &&
+										reservation.paymentDueDate && (
+											<p className='text-xs text-base-content/70'>
+												📅 Vencimento:{" "}
+												{new Date(
+													reservation.paymentDueDate,
+												).toLocaleDateString("pt-BR")}
+											</p>
+										)}
+									{reservation.createdByEmail && (
+										<p className='text-xs text-base-content/50 pt-1'>
+											Criado por:{" "}
+											{reservation.createdByEmail}
+										</p>
+									)}
 								</div>
 								<button
 									aria-label='Remover reserva'
@@ -110,6 +165,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
 											value,
 										)
 									}
+									tripMembers={tripMembers}
 								/>
 							</div>
 						</div>

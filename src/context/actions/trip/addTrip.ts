@@ -8,6 +8,7 @@ interface AddTripActionParams {
 	name: string;
 	country: string;
 	defaultTimezone: string | undefined;
+	travelers?: number;
 	refreshTrips: () => Promise<void>;
 	setActiveTrip: (trip: Trip) => void;
 }
@@ -17,6 +18,7 @@ export async function addTripAction({
 	name,
 	country,
 	defaultTimezone,
+	travelers,
 	refreshTrips,
 	setActiveTrip,
 }: AddTripActionParams): Promise<Trip> {
@@ -26,6 +28,7 @@ export async function addTripAction({
 		name,
 		country,
 		...(defaultTimezone ? { defaultTimezone } : {}),
+		...(travelers ? { travelers } : {}),
 		ownerId: user.uid,
 		ownerEmail: user.email,
 		whitelistedEmails: [user.email],

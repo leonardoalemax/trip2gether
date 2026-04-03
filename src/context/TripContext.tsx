@@ -24,6 +24,7 @@ interface TripContextValue {
 		name: string,
 		country: string,
 		defaultTimezone?: string,
+		travelers?: number,
 	) => Promise<Trip>;
 	editTrip: (
 		tripId: string,
@@ -83,12 +84,14 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
 		name: string,
 		country: string,
 		defaultTimezone?: string,
+		travelers?: number,
 	): Promise<Trip> => {
 		return addTripAction({
 			user,
 			name,
 			country,
 			defaultTimezone,
+			travelers,
 			refreshTrips,
 			setActiveTrip,
 		});

@@ -10,6 +10,7 @@ export default function NewTripPage() {
 	const [name, setName] = useState("");
 	const [country, setCountry] = useState("");
 	const [defaultTimezone, setDefaultTimezone] = useState("");
+	const [travelers, setTravelers] = useState("");
 	const [saving, setSaving] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -21,6 +22,7 @@ export default function NewTripPage() {
 				name.trim(),
 				country.trim(),
 				defaultTimezone || undefined,
+				travelers ? parseInt(travelers, 10) : undefined,
 			);
 			navigate("/dashboard");
 		} finally {
@@ -97,6 +99,21 @@ export default function NewTripPage() {
 									</option>
 								))}
 							</select>
+						</div>
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text'>
+									Quantidade de viajantes
+								</span>
+							</label>
+							<input
+								type='number'
+								placeholder='Ex: 4'
+								min='1'
+								value={travelers}
+								onChange={(e) => setTravelers(e.target.value)}
+								className='input input-bordered w-full'
+							/>
 						</div>
 						<button
 							type='submit'

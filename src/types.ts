@@ -33,21 +33,34 @@ export interface Ticket {
 
 export type DraftTicket = Omit<Ticket, "id" | "tripId" | "createdAt">;
 
+export type PaymentType = "pagar_na_hora" | "pago_pelo_reservante";
+
 export interface Reservation {
 	id: string;
 	tripId: string;
 	city: string;
 	hotelName: string;
+	hotelAddress: string;
+	reservationValue: string;
+	reservedByEmail: string;
+	paymentType: PaymentType;
+	paymentDueDate?: string;
+	reservationLink?: string;
 	color: string;
 	timezone: string;
 	checkInDate: string;
 	checkInTime: string;
 	checkOutDate: string;
 	checkOutTime: string;
+	createdByUserId: string;
+	createdByEmail: string;
 	createdAt: string;
 }
 
-export type DraftReservation = Omit<Reservation, "id" | "tripId" | "createdAt">;
+export type DraftReservation = Omit<
+	Reservation,
+	"id" | "tripId" | "createdAt" | "createdByUserId" | "createdByEmail"
+>;
 
 export interface TripInvite {
 	id: string;
@@ -63,10 +76,11 @@ export interface Trip {
 	country: string;
 	defaultTimezone?: string;
 	accessCode?: string;
+	travelers?: number;
 	ownerId: string;
 	ownerEmail: string;
 	whitelistedEmails: string[];
 	createdAt: string;
 }
 
-export type ScreenType = "calendar" | "tickets" | "reservations";
+export type ScreenType = "calendar" | "tickets" | "reservations" | "payments";

@@ -16,6 +16,7 @@ export default function EditTripModal({ id }: Props) {
 	const [name, setName] = useState("");
 	const [country, setCountry] = useState("");
 	const [defaultTimezone, setDefaultTimezone] = useState("");
+	const [travelers, setTravelers] = useState("");
 	const [accessCode, setAccessCode] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [copySuccess, setCopySuccess] = useState(false);
@@ -25,6 +26,9 @@ export default function EditTripModal({ id }: Props) {
 			setName(activeTrip.name);
 			setCountry(activeTrip.country);
 			setDefaultTimezone(activeTrip.defaultTimezone || "");
+			setTravelers(
+				activeTrip.travelers ? String(activeTrip.travelers) : "",
+			);
 			setAccessCode(activeTrip.accessCode || "");
 			setCopySuccess(false);
 		}
@@ -48,6 +52,7 @@ export default function EditTripModal({ id }: Props) {
 				country: country.trim(),
 				defaultTimezone: defaultTimezone || "",
 				accessCode: ensuredCode,
+				...(travelers ? { travelers: parseInt(travelers, 10) } : {}),
 			});
 
 			setAccessCode(ensuredCode);
@@ -143,7 +148,22 @@ export default function EditTripModal({ id }: Props) {
 								</option>
 							))}
 						</select>
-					</div>
+					</div>{" "}
+					<div className='form-control'>
+						<label className='label'>
+							<span className='label-text'>
+								Quantidade de viajantes
+							</span>
+						</label>
+						<input
+							type='number'
+							placeholder='Ex: 4'
+							min='1'
+							value={travelers}
+							onChange={(e) => setTravelers(e.target.value)}
+							className='input input-bordered w-full'
+						/>
+					</div>{" "}
 					<div className='modal-action mt-2'>
 						<button
 							type='submit'
