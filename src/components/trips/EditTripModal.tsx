@@ -42,10 +42,7 @@ export default function EditTripModal({ id }: Props) {
 
 		setSaving(true);
 		try {
-			const currentCode = (activeTrip.accessCode || "").trim();
-			const ensuredCode = /^\d{6}$/.test(currentCode)
-				? currentCode
-				: await ensureTripAccessCode(activeTrip.id);
+			const ensuredCode = await ensureTripAccessCode(activeTrip.id);
 
 			await editTrip(activeTrip.id, {
 				name: name.trim(),

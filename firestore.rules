@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userEmail() {
+      return request.auth.token.email;
+    }
+
+    function isOwner() {
+      return signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    function isMember() {
+      return signedIn() &&
+        (resource.data.ownerId == request.auth.uid
+          || userEmail() in resource.data.whitelistedEmails);
+    }
+
+    function validAccessCode(code) {
+      return code is string && code.matches('^[0-9]{6}$');
+    }
+
+    match /trips/{tripId} {
+      allow read: if isMember();
+
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && userEmail() in request.resource.data.whitelistedEmails
+        && validAccessCode(request.resource.data.accessCode);
+
+      // Owner pode editar trip (inclui gerar/atualizar accessCode)
+      allow update: if isOwner()
+        && validAccessCode(request.resource.data.accessCode);
+
+      // Nao-membro pode entrar por codigo:
+      // so pode alterar whitelistedEmails, mantendo dados da trip intactos
+      allow update: if signedIn()
+        && validAccessCode(resource.data.accessCode)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['whitelistedEmails'])
+        && request.resource.data.whitelistedEmails.hasAll(resource.data.whitelistedEmails)
+        && request.resource.data.whitelistedEmails.hasAny([userEmail()])
+        && request.resource.data.whitelistedEmails.size() <= resource.data.whitelistedEmails.size() + 1;
+
+      allow delete: if isOwner();
+
+      match /tickets/{ticketId} {
+        function tripData() {
+          return get(/databases/$(database)/documents/trips/$(tripId)).data;
+        }
+        function tripMember() {
+          return request.auth != null
+            && (tripData().ownerId == request.auth.uid
+              || request.auth.token.email in tripData().whitelistedEmails);
+        }
+
+        allow read, create, update, delete: if tripMember();
+      }
+
+      match /reservations/{reservationId} {
+        function tripData() {
+          return get(/databases/$(database)/documents/trips/$(tripId)).data;
+        }
+        function tripMember() {
+          return request.auth != null
+            && (tripData().ownerId == request.auth.uid
+              || request.auth.token.email in tripData().whitelistedEmails);
+        }
+
+        allow read, create, update, delete: if tripMember();
+      }
+
+      match /passeios/{passeioId} {
+        function tripData() {
+          return get(/databases/$(database)/documents/trips/$(tripId)).data;
+        }
+        function tripMember() {
+          return request.auth != null
+            && (tripData().ownerId == request.auth.uid
+              || request.auth.token.email in tripData().whitelistedEmails);
+        }
+
+        allow read, create, update, delete: if tripMember();
+      }
+    }
+
+    match /tripCodes/{code} {
+      allow get: if signedIn();
+
+      allow create, update: if signedIn()
+        && get(/databases/$(database)/documents/trips/$(request.resource.data.tripId)).data.ownerId == request.auth.uid;
+    }
+
+    match /invites/{inviteId} {
+      function inviteTrip() {
+        return get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data;
+      }
+
+      allow read: if request.auth != null
+        && (userEmail() == resource.data.email
+          || inviteTrip().ownerId == request.auth.uid
+          || userEmail() in inviteTrip().whitelistedEmails);
+
+      allow create: if request.auth != null
+        && get(/databases/$(database)/documents/trips/$(request.resource.data.tripId)).data.ownerId == request.auth.uid;
+
+      allow update: if request.auth != null
+        && request.auth.token.email == resource.data.email
+        && request.resource.data.accepted == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['accepted']);
+    }
+  }
+}

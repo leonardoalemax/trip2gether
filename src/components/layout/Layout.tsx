@@ -49,7 +49,11 @@ export default function Layout({
 				{children}
 			</main>
 			<footer className='md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-base-200 bg-base-100/95 backdrop-blur supports-backdrop-filter:bg-base-100/80'>
-				<nav className='grid grid-cols-4 p-1'>
+				<nav
+					className='grid p-1'
+					style={{
+						gridTemplateColumns: `repeat(${LAYOUT_NAV_ITEMS.length}, minmax(0, 1fr))`,
+					}}>
 					{LAYOUT_NAV_ITEMS.map((item) => (
 						<button
 							key={item.id}

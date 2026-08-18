@@ -7,8 +7,8 @@ import {
 	doc,
 	getDoc,
 	getDocs,
-	limit,
 	query,
+	setDoc,
 	updateDoc,
 	where,
 } from "firebase/firestore";
@@ -17,20 +17,19 @@ import type { Trip, TripInvite } from "../types";
 
 const TRIPS_COL = "trips";
 const INVITES_COL = "invites";
+const TRIP_CODES_COL = "tripCodes";
 
 function randomSixDigitCode(): string {
 	return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+async function setTripCodeMapping(code: string, tripId: string): Promise<void> {
+	await setDoc(doc(db, TRIP_CODES_COL, code), { tripId });
+}
+
 async function isAccessCodeInUse(code: string): Promise<boolean> {
-	const snap = await getDocs(
-		query(
-			collection(db, TRIPS_COL),
-			where("accessCode", "==", code),
-			limit(1),
-		),
-	);
-	return !snap.empty;
+	const snap = await getDoc(doc(db, TRIP_CODES_COL, code));
+	return snap.exists();
 }
 
 async function generateUniqueAccessCode(maxAttempts = 25): Promise<string> {
@@ -52,6 +51,7 @@ export async function createTripRecord(
 		createdAt: new Date().toISOString(),
 	};
 	const ref = await addDoc(collection(db, TRIPS_COL), data);
+	await setTripCodeMapping(data.accessCode, ref.id);
 	return { id: ref.id, ...data };
 }
 
@@ -144,11 +144,13 @@ export async function ensureTripAccessCode(tripId: string): Promise<string> {
 
 	const existingCode = String(trip.accessCode ?? "").trim();
 	if (/^\d{6}$/.test(existingCode)) {
+		await setTripCodeMapping(existingCode, tripId);
 		return existingCode;
 	}
 
 	const accessCode = await generateUniqueAccessCode();
 	await updateDoc(doc(db, TRIPS_COL, tripId), { accessCode });
+	await setTripCodeMapping(accessCode, tripId);
 	return accessCode;
 }
 
@@ -159,22 +161,13 @@ export async function joinTripByAccessCode(
 	const normalizedCode = accessCode.replace(/\D/g, "").slice(0, 6);
 	if (!/^\d{6}$/.test(normalizedCode)) return null;
 
-	const snap = await getDocs(
-		query(
-			collection(db, TRIPS_COL),
-			where("accessCode", "==", normalizedCode),
-			limit(1),
-		),
-	);
+	const codeSnap = await getDoc(doc(db, TRIP_CODES_COL, normalizedCode));
+	if (!codeSnap.exists()) return null;
 
-	if (snap.empty) return null;
+	const { tripId } = codeSnap.data() as { tripId: string };
+	await addTripWhitelistEmail(tripId, userEmail.toLowerCase());
 
-	const tripDoc = snap.docs[0];
-	if (!tripDoc) return null;
-	const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip;
-	await addTripWhitelistEmail(trip.id, userEmail.toLowerCase());
-
-	return getTripRecordById(trip.id);
+	return getTripRecordById(tripId);
 }
 
 export async function createTrip(

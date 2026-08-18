@@ -2,6 +2,8 @@ import React from "react";
 import { SlotType } from "../../types";
 import { ReservationMoment } from "./types/ReservationMoment";
 import { TicketMoment } from "./types/TicketMoment";
+import { PasseioMoment } from "./types/PasseioMoment";
+import CalendarPasseioTag from "./CalendarPasseioTag";
 import { SLOTS } from "./utils/slotUtils";
 import { darkenHex } from "./utils/styleUtils";
 
@@ -11,6 +13,8 @@ interface CalendarDayViewProps {
 	ticketMomentsBySlot: Map<string, TicketMoment[]>;
 	reservationMomentsBySlot: Map<string, ReservationMoment[]>;
 	reservationColorByDateSlot: Map<string, string>;
+	passeioMomentsBySlot: Map<string, PasseioMoment[]>;
+	passeioColorByDateSlot: Map<string, string>;
 	onSelectDay: (iso: string) => void;
 	onClose: () => void;
 }
@@ -28,9 +32,9 @@ function formatDayLabel(iso: string) {
 }
 
 function renderMomentTag(
-	moment: TicketMoment | ReservationMoment,
-	kind: "ticket" | "reservation",
-	reservationDayColor?: string,
+	moment: TicketMoment | ReservationMoment | PasseioMoment,
+	kind: "ticket" | "reservation" | "passeio",
+	dayColor?: string,
 ) {
 	if (kind === "ticket") {
 		const ticketMoment = moment as TicketMoment;
@@ -52,8 +56,21 @@ function renderMomentTag(
 		);
 	}
 
+	if (kind === "passeio") {
+		const passeioMoment = moment as PasseioMoment;
+
+		return (
+			<CalendarPasseioTag
+				key={passeioMoment.id}
+				moment={passeioMoment}
+				dayColor={dayColor}
+				fontSize={11}
+			/>
+		);
+	}
+
 	const reservationMoment = moment as ReservationMoment;
-	const reservationColor = reservationDayColor ?? "#f97316";
+	const reservationColor = dayColor ?? "#f97316";
 
 	return (
 		<div
@@ -79,6 +96,8 @@ export default function CalendarDayView({
 	ticketMomentsBySlot,
 	reservationMomentsBySlot,
 	reservationColorByDateSlot,
+	passeioMomentsBySlot,
+	passeioColorByDateSlot,
 	onSelectDay,
 	onClose,
 }: CalendarDayViewProps) {
@@ -133,8 +152,15 @@ export default function CalendarDayView({
 					const reservationDayColor = reservationColorByDateSlot.get(
 						`${dayIso}|${slot}`,
 					);
+					const passeioList =
+						passeioMomentsBySlot.get(`${dayIso}|${slot}`) ?? [];
+					const passeioDayColor = passeioColorByDateSlot.get(
+						`${dayIso}|${slot}`,
+					);
 					const hasItems =
-						ticketList.length > 0 || reservationList.length > 0;
+						ticketList.length > 0 ||
+						reservationList.length > 0 ||
+						passeioList.length > 0;
 
 					return (
 						<div
@@ -148,7 +174,9 @@ export default function CalendarDayView({
 									padding: 8,
 									background: reservationDayColor
 										? `${reservationDayColor}22`
-										: "transparent",
+										: passeioDayColor
+											? `${passeioDayColor}22`
+											: "transparent",
 								}}>
 								{!hasItems ? (
 									<p className='text-xs text-base-content/40'>
@@ -168,6 +196,13 @@ export default function CalendarDayView({
 												item,
 												"reservation",
 												reservationDayColor,
+											),
+										)}
+										{passeioList.map((item) =>
+											renderMomentTag(
+												item,
+												"passeio",
+												passeioDayColor,
 											),
 										)}
 									</>

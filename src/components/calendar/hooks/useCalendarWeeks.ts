@@ -1,11 +1,13 @@
 import { useMemo } from "react";
 import { ReservationMoment } from "../types/ReservationMoment";
 import { TicketMoment } from "../types/TicketMoment";
+import { PasseioMoment } from "../types/PasseioMoment";
 import { addDays, parseDateOnly } from "../utils/dateUtils";
 
 export function useCalendarWeeks(
 	ticketMoments: TicketMoment[],
 	reservationMoments: ReservationMoment[],
+	passeioMoments: PasseioMoment[] = [],
 ) {
 	const defaultWeek = { startDate: null, endDate: null };
 
@@ -13,6 +15,7 @@ export function useCalendarWeeks(
 		const allDates = [
 			...ticketMoments.map((moment) => moment.iso),
 			...reservationMoments.map((moment) => moment.iso),
+			...passeioMoments.map((moment) => moment.iso),
 		];
 		if (allDates.length > 0) {
 			const sorted = [...allDates].sort();
@@ -40,7 +43,7 @@ export function useCalendarWeeks(
 		}
 
 		return defaultWeek;
-	}, [ticketMoments, reservationMoments]);
+	}, [ticketMoments, reservationMoments, passeioMoments]);
 
 	const weeks = useMemo(() => {
 		const days: Date[] = [];

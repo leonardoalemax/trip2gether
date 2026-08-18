@@ -8,7 +8,9 @@ export interface LayoutNavItem {
 
 export const LAYOUT_NAV_ITEMS: LayoutNavItem[] = [
 	{ id: "calendar", label: "Calendário", emoji: "📅" },
+	{ id: "itinerary", label: "Itinerário", emoji: "🧭" },
 	{ id: "tickets", label: "Passagens", emoji: "✈️" },
 	{ id: "reservations", label: "Reservas", emoji: "🏨" },
+	{ id: "passeios", label: "Passeios", emoji: "🗺️" },
 	{ id: "payments", label: "Pagamentos", emoji: "💵" },
 ];

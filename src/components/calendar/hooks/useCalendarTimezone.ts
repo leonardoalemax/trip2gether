@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Reservation, Ticket } from "../../../types";
+import { Passeio, Reservation, Ticket } from "../../../types";
 import { TIMEZONE_OPTIONS } from "../../tickets/timezoneOptions";
 
 export function useCalendarTimezone(
 	tickets: Ticket[],
 	reservations: Reservation[],
+	passeios: Passeio[],
 	defaultTimezone?: string,
 ) {
 	const availableTimezones = useMemo(() => {
@@ -16,8 +17,11 @@ export function useCalendarTimezone(
 		for (const reservation of reservations) {
 			if (reservation.timezone) set.add(reservation.timezone);
 		}
+		for (const passeio of passeios) {
+			if (passeio.timezone) set.add(passeio.timezone);
+		}
 		return TIMEZONE_OPTIONS.filter((tz) => set.has(tz.value));
-	}, [tickets, reservations]);
+	}, [tickets, reservations, passeios]);
 
 	const [selectedTimezone, setSelectedTimezone] = useState<string>("");
 

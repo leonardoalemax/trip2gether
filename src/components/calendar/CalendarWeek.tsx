@@ -1,7 +1,9 @@
 import React from "react";
 import { ReservationMoment } from "./types/ReservationMoment";
 import { TicketMoment } from "./types/TicketMoment";
+import { PasseioMoment } from "./types/PasseioMoment";
 import CalendarCell from "./CalendarCell";
+import CalendarPasseioTag from "./CalendarPasseioTag";
 import { SLOTS, DAY_NAMES } from "./utils/slotUtils";
 import { dstr, formatWeekLabel } from "./utils/dateUtils";
 import { darkenHex } from "./utils/styleUtils";
@@ -14,6 +16,8 @@ interface CalendarWeekProps {
 	ticketMomentsBySlot: Map<string, TicketMoment[]>;
 	reservationMomentsBySlot: Map<string, ReservationMoment[]>;
 	reservationColorByDateSlot: Map<string, string>;
+	passeioMomentsBySlot: Map<string, PasseioMoment[]>;
+	passeioColorByDateSlot: Map<string, string>;
 	onDayHeaderClick?: (iso: string) => void;
 }
 
@@ -25,6 +29,8 @@ export default function CalendarWeek({
 	ticketMomentsBySlot,
 	reservationMomentsBySlot,
 	reservationColorByDateSlot,
+	passeioMomentsBySlot,
+	passeioColorByDateSlot,
 	onDayHeaderClick,
 }: CalendarWeekProps) {
 	return (
@@ -82,9 +88,19 @@ export default function CalendarWeek({
 										reservationColorByDateSlot.get(
 											`${iso}|${slot}`,
 										);
+									const passeioList =
+										passeioMomentsBySlot.get(
+											`${iso}|${slot}`,
+										) ?? [];
+									const passeioDayColor =
+										passeioColorByDateSlot.get(
+											`${iso}|${slot}`,
+										);
 									const bg = reservationDayColor
 										? `${reservationDayColor}22`
-										: "transparent";
+										: passeioDayColor
+											? `${passeioDayColor}22`
+											: "transparent";
 
 									return (
 										<div
@@ -96,7 +112,8 @@ export default function CalendarWeek({
 											</div>
 											<div>
 												{ticketList.length === 0 &&
-												reservationList.length === 0 ? (
+												reservationList.length === 0 &&
+												passeioList.length === 0 ? (
 													<p className='text-xs text-base-content/40'>
 														Sem eventos
 													</p>
@@ -171,6 +188,22 @@ export default function CalendarWeek({
 																</div>
 															),
 														)}
+													{passeioList.map(
+														(passeioMoment) => (
+															<CalendarPasseioTag
+																key={
+																	passeioMoment.id
+																}
+																moment={
+																	passeioMoment
+																}
+																dayColor={
+																	passeioDayColor
+																}
+																fontSize={10}
+															/>
+														),
+													)}
 													</>
 												)}
 											</div>
@@ -278,6 +311,14 @@ export default function CalendarWeek({
 										reservationColorByDateSlot.get(
 											`${iso}|${slot}`,
 										);
+									const passeioList =
+										passeioMomentsBySlot.get(
+											`${iso}|${slot}`,
+										) ?? [];
+									const passeioDayColor =
+										passeioColorByDateSlot.get(
+											`${iso}|${slot}`,
+										);
 
 									return (
 										<CalendarCell
@@ -289,6 +330,8 @@ export default function CalendarWeek({
 											reservationDayColor={
 												reservationDayColor
 											}
+											passeioList={passeioList}
+											passeioDayColor={passeioDayColor}
 										/>
 									);
 								})}

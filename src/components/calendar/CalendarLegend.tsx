@@ -1,10 +1,11 @@
 import React from "react";
-import { Reservation } from "../../types";
+import { Passeio, Reservation } from "../../types";
 import { TIMEZONE_OPTIONS } from "../tickets/timezoneOptions";
 import { darkenHex } from "./utils/styleUtils";
 
 interface CalendarLegendProps {
 	reservations: Reservation[];
+	passeios: Passeio[];
 	availableTimezones: typeof TIMEZONE_OPTIONS;
 	selectedTimezone: string;
 	onTimezoneChange: (tz: string) => void;
@@ -12,6 +13,7 @@ interface CalendarLegendProps {
 
 export default function CalendarLegend({
 	reservations,
+	passeios,
 	availableTimezones,
 	selectedTimezone,
 	onTimezoneChange,
@@ -33,8 +35,19 @@ export default function CalendarLegend({
 			});
 		}
 
+		for (const passeio of passeios) {
+			const key = passeio.city.trim().toLowerCase();
+			if (!key || cityMap.has(key)) continue;
+
+			cityMap.set(key, {
+				id: passeio.id,
+				name: passeio.city,
+				color: passeio.color || "#ddd6fe",
+			});
+		}
+
 		return Array.from(cityMap.values());
-	}, [reservations]);
+	}, [reservations, passeios]);
 
 	return (
 		<div className='space-y-3'>
@@ -74,6 +87,13 @@ export default function CalendarLegend({
 						style={{ background: "#bbf7d0" }}
 					/>
 					Programação
+				</span>
+				<span className='flex items-center gap-1.5'>
+					<span
+						className='inline-block w-3 h-3 rounded'
+						style={{ background: "#ddd6fe" }}
+					/>
+					Passeio
 				</span>
 				<span className='flex items-center gap-1.5'>
 					<span

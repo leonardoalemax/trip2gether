@@ -1,0 +1,78 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+Trip2gether is a collaborative trip-planning SPA (React + TypeScript + Vite + Firebase). Multiple people share a "trip" and jointly manage its flights (`tickets`), hotel `reservations`, outings (`passeios`), a derived `payments` split, and a merged `calendar` view built from all three. All UI copy is in Portuguese (pt-BR).
+
+## Commands
+
+```bash
+yarn dev       # start Vite dev server
+yarn build     # vite build -> dist/ (no separate tsc check; run `npx tsc --noEmit` for full type-checking)
+yarn lint      # eslint .
+yarn preview   # preview the production build
+```
+
+There is no test suite/runner configured in this repo.
+
+Package manager is **yarn** (yarn.lock is committed; CI uses `yarn install --frozen-lockfile`).
+
+## Environment
+
+Firebase config is read from `VITE_FIREBASE_*` env vars (see `src/firebase.ts`) and lives in `.env.local` (gitignored). Required keys: `VITE_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`.
+
+No Google Maps API key is needed anywhere: the itinerary map is Leaflet + OpenStreetMap, and the Google Maps *links* use the keyless `maps/dir/?api=1` format. (An embedded Google map was tried and dropped — see the itinerary notes below.)
+
+Deployment is GitHub Pages via `.github/workflows/deploy.yml` on push to `main` (`vite.config.js` sets `base: "/trip2gether/"`). The workflow injects the `VITE_FIREBASE_*` secrets at build time.
+
+[firestore.rules](firestore.rules) is versioned in the repo and covers `trips` (+ `tickets`/`reservations`/`passeios` subcollections) and `invites`, matching `src/services/*.ts`. **It is not auto-deployed** — there's no `firebase.json`/CI step wired up, so after editing it you must manually paste it into the Firebase console (Firestore → Rules) or run `firebase deploy --only firestore:rules` with the Firebase CLI for it to take effect. If the console's live rules were last updated before this file existed, they're out of sync — redeploy after any local edit to `firestore.rules`.
+
+## Data model & Firestore layout
+
+Firestore collections (see `src/types.ts` for full shapes):
+
+- `trips/{tripId}` — a `Trip`: name, country, `ownerId`/`ownerEmail`, `whitelistedEmails[]` (who can access it), a 6-digit `accessCode`, optional `defaultTimezone` and `travelers` count.
+  - `trips/{tripId}/tickets/{ticketId}` — flights (`Ticket`).
+  - `trips/{tripId}/reservations/{reservationId}` — hotel stays (`Reservation`), each with its own IANA-ish `timezone`, check-in/out date+time, `reservationValue`/`signalAmount` (strings, BRL-formatted), `paymentType` (`pagar_na_hora` | `pago_pelo_reservante`), `reservedByEmail`.
+  - `trips/{tripId}/passeios/{passeioId}` — outings (`Passeio`): title, city, address, own `timezone`, departure/return date+time, an `items: PasseioItem[]` checklist (each with `title`/`type` (`ingresso`|`transporte`|`outros`)/`value`/`purchased`) and a `checkpoints: PasseioCheckpoint[]` list (each with `title`/`address`/`entryTime`/`exitTime`, no date of its own — assumed same day as the outing) — both edited inline in `PasseioFields.tsx`, no subcollection, the whole array is replaced on each edit — and `descriptionMd` (Markdown, edited via `@uiw/react-md-editor`).
+- `invites/{inviteId}` — a `TripInvite` (tripId, email, accepted) created for email-link invites, separate from the accessCode join flow.
+- `tripCodes/{accessCode}` — a lookup-only doc (`{ tripId }`) that lets `joinTripByAccessCode` resolve a 6-digit code to a trip without needing broad read access to the `trips` collection. Rules only allow `get` (never `list`) on this collection, so a code must be known exactly, not enumerated. Written by `setTripCodeMapping` (in `tripServices.ts`) whenever a trip's `accessCode` is created or confirmed — including a self-heal write inside `ensureTripAccessCode`, which `EditTripModal` now calls unconditionally on every save specifically so older trips get backfilled into `tripCodes` the next time their owner touches Edit Trip. Trips that predate this collection and whose owner hasn't opened Edit Trip since won't be joinable by code until backfilled — run `yarn backfill:trip-codes` (needs `GOOGLE_APPLICATION_CREDENTIALS` pointing at a Firebase service account JSON; see `scripts/backfillTripCodes.mjs`) to fix all of them in one pass.
+
+Two ways to join a trip: (1) owner emails an invite link `/invite/:inviteId` which calls `acceptInvite` and whitelists the email, or (2) anyone with the 6-digit `accessCode` can self-join from `TripSelectPage` via `joinTripByAccessCode`. All Firestore access (`src/services/*.ts`) goes through `tripServices.ts`, `ticketService.ts`, `reservationService.ts` — there's no ORM/abstraction beyond these thin wrapper functions.
+
+## App structure
+
+- `src/App.tsx` — `HashRouter` (routes use `#/...`, needed for static GitHub Pages hosting) gating everything on Firebase auth (`useAuthState`). Routes: `/` (login or redirect), `/select-trip`, `/new-trip`, `/dashboard`, `/invite/:inviteId`.
+- `src/context/TripContext.tsx` (`TripProvider`/`useTripContext`) — loads the current user's trips (owned + whitelisted, deduped, via `getUserTrips`), tracks `activeTrip`, and persists the chosen trip id in a cookie (`src/utils/tripCookie.ts`) so `/` can skip straight to `/dashboard`. Trip mutations are split into `src/context/actions/trip/{add,edit,remove}Trip.ts` and called through the context rather than the services directly.
+- `src/Dashboard.tsx` — wraps `Layout` + a screen switch (`calendar` | `itinerary` | `tickets` | `reservations` | `passeios` | `payments`, see `ScreenType` in `types.ts`) plus the always-mounted `EditTripModal` (a native `<dialog>` opened imperatively by id from `Header`/`Sidebar`).
+- `src/components/layout/` — `Layout` renders `Header` + desktop subheader nav + mobile bottom-tab nav, both driven by the single source of truth `navItems.ts` (`LAYOUT_NAV_ITEMS`). The mobile bottom nav's column count is computed from `LAYOUT_NAV_ITEMS.length` via inline style (not a static `grid-cols-N` class), since Tailwind can't generate a dynamic utility class at build time — keep that in mind if adding/removing nav items.
+- `src/components/tickets/`, `reservations/`, `passeios/`, `payments/` — each screen owns its own Firestore fetch via the matching service and does its own CRUD (list/form/fields components per feature). `PaymentsScreen` doesn't hit Firestore itself for money math — it derives a per-reservation, per-traveler cost split client-side from `reservations` + `activeTrip.travelers` (passeios are not part of the payment split). `passeios/PasseioFields.tsx` embeds `@uiw/react-md-editor` for the `descriptionMd` field (`data-color-mode="light"`, matching the single-theme DaisyUI setup — see Conventions).
+- `passeios/PasseioItinerary.tsx` — the only cross-feature read in the app: `PasseiosScreen` also fetches `reservations` (via `useReservations`) purely so the itinerary can resolve *where you're staying on the outing's date*. `utils/itinerary.ts` `findStayForDate` matches the passeio's `departureDate` against each reservation's check-in/check-out range, and `buildItinerary` produces `stay → (passeio address) → checkpoints sorted by entryTime → stay`. With no reservation covering the date it degrades to the passeio's own city and says so in the UI.
+  - **The map is Leaflet, the links are Google — deliberately split.** `PasseioRouteMap.tsx` plots the stops with red `L.divIcon` markers (`#dc2626`, the stay darker at `#7f1d1d` with 🏨) joined by a dashed line. The line is a straight hop between stops, *not* a routed path; the UI says so and points at the Google buttons for real routing. This split exists because an embedded Google map was tried and rejected: the Maps Embed API has no styling parameters at all, so marker colours can't be changed — that was the dealbreaker.
+  - `utils/googleMaps.ts` builds links from the stop's **text** (`stopQueries(stop)[0]`), never coordinates: Google's geocoder is far better than the Nominatim lookup used for plotting, so the links work even where the map pin is approximate.
+  - Per-stop buttons (`buildLegLink`) use `transit`; the whole-day link (`buildFullRouteLink`) uses `driving`. **That difference is required, not an oversight:** Google does not route public transport through intermediate waypoints (neither the legacy Directions API nor the Routes API), so chaining every stop into one link only works in driving mode. `buildFullRouteLink` is the only builder subject to Google's 9-waypoint cap.
+  - `utils/geocode.ts` hits Nominatim (no key). Their policy caps it at ~1 req/s, so calls go through a serial queue and every result — misses included, cached as `null` — is persisted to `localStorage` under `trip2gether_geocode_cache`. Hand-typed addresses miss often, so `stopQueries` tries `address, city` then falls back to `title, city` (attraction *names* resolve far better in OSM), and bare `city` only for the stay — never for a specific attraction, which would silently pin it to the city centre. Fallback hits are flagged `approximate` and rendered at 0.7 opacity.
+  - Two Leaflet gotchas already paid for: markers must be `divIcon` (the default icon's image paths break under Vite bundling), and `invalidateSize()` must run *before* `fitBounds()` because the map mounts inside a collapsible card — a `ResizeObserver` plus a deferred `refit()` cover the first layout, otherwise the zoom is computed from a near-zero container width. Marker numbers come from `RoutePoint.order` (index in the full stop list) so they keep matching the text list when a stop fails to geocode.
+  - Verification note: the agent harness's headless browser renders Leaflet fine (tiles and markers are inspectable via `.leaflet-marker-icon`) but never paints Google `iframe`s, and `ResizeObserver` does not fire there at all.
+  - There is deliberately **no client-side geocoding and no Leaflet map** here anymore — an earlier version drew the route with Leaflet + Nominatim and was replaced by Google's embed, which routes properly instead of drawing straight lines between stops.
+- `src/components/itinerary/` — the "Itinerário" screen: a single chronological read of the whole trip, day by day. It **owns no data and no timezone maths** — it reuses the calendar's hooks (`useCalendarTickets`/`useReservations`/`usePasseios` → `useTicketMoments`/`useReservationMoments`/`usePasseioMoments` → `useCalendarWeeks` for the date span) and only reshapes the result. `useTripAgenda` flattens the three moment lists into per-day, per-slot entries sorted by clock time; `AgendaDayList` is the pure presentational half (kept separate so it can be rendered against fixture data without Firestore or auth). Two rules encoded there: passeio `middle` blocks mark a slot **busy without printing a line** (otherwise the outing repeats down the whole day), and a slot/day is "ainda livre" only when nothing at all touches it — note a hotel stay does *not* make a day busy, since sleeping somewhere isn't a plan. Adding a 4th data source means extending `useTripAgenda` too, not just the calendar.
+- `src/components/calendar/` — the most involved feature; assembles tickets + reservations + passeios into one multi-week grid. Key pieces:
+  - `CalendarCard` composes everything; hooks under `calendar/hooks/` each own one concern: `useCalendarTickets`/`useReservations`/`usePasseios` (data fetch), `useCalendarTimezone` (which timezone the grid is currently rendered in — user-selectable, defaults from trip/ticket/reservation/passeio data), `useTicketMoments`/`useReservationMoments`/`usePasseioMoments` (convert raw records into timezone-adjusted "moments" bucketed by day+slot), `useCalendarWeeks` (builds the week/day grid spanning the trip, from all three moment lists).
+  - Day is split into 3 slots (`manhã`/`tarde`/`noite`, see `calendar/utils/slotUtils.ts`) — all calendar rendering keys off `(dateIso, slot)`.
+  - `calendar/utils/timezoneUtils.ts` does the actual UTC conversion math (a record's local date/time + its own timezone → UTC instant → reformatted into the globally-selected display timezone). Any calendar-timezone bug is almost certainly here.
+  - City coloring: reservations and passeios each get a deterministic color hashed from city name (`colorFromCityName` in `useReservationMoments.ts`/`usePasseioMoments.ts`, two separate palettes) unless they have an explicit `color`, used to shade calendar cells for that city's date range. `CalendarWeek`/`CalendarDayView`/`CalendarCell` each render ticket, reservation, and passeio moments side by side per slot — extending the calendar with a 4th data source means touching all three of these plus `useCalendarWeeks`.
+  - **Passeios are the only source rendered as a spanning block, not point events.** `usePasseioMoments` emits one `kind: "bloco"` moment per `(date, slot)` the outing covers, tagged `position: start | middle | end | single`, plus one `kind: "checkpoint"` moment per checkpoint at its own `entryTime`. Checkpoints carry no date of their own, so they're anchored to the passeio's `departureDate` — the same assumption the itinerary makes. All three calendar views delegate passeio rendering to the shared `CalendarPasseioTag`, which squares off the corners of `middle`/`end` slots so adjacent slots read as one continuous band; tickets and reservations still inline their own markup.
+- `src/Login.tsx` / `src/firebase.ts` — Google popup + email/password auth, with pt-BR error messages mapped from Firebase auth error codes.
+
+## Conventions to know
+
+- Path alias `@/*` → `src/*` (see `tsconfig.json`); used inconsistently — some files import via `@/types`, most use relative paths. Follow whichever a given file already uses.
+- Styling is Tailwind v4 + DaisyUI v5 (see `src/index.css`, `@tailwindcss/vite` plugin) — components use DaisyUI class names (`card`, `btn`, `modal`, `input-bordered`, etc.) rather than custom CSS.
+- Passeios are listed in chronological order (departure date, then time) via `sortPasseios` in `passeioService.ts`, applied client-side after the fetch — Firestore would need a composite index to order on two fields, which isn't worth it for a handful of docs. The Firestore query itself still orders by `createdAt`. Undated passeios sort last. `PasseiosScreen` re-sorts after creating a passeio and after an inline edit to `departureDate`/`departureTime`, but deliberately *not* on other field edits, so a card doesn't jump while it's being edited.
+- Money values (`reservationValue`, `signalAmount`) are stored as free-text strings, not numbers — parsing happens ad hoc at read time (see `parseMoneyValue` in `PaymentsScreen.tsx`).
+- `leaflet` (+ `@types/leaflet`) is used *only* by `passeios/PasseioRouteMap.tsx`, driven imperatively — there is no `react-leaflet` here, so don't reach for `<MapContainer>`-style APIs. Its CSS is imported explicitly in that component (`leaflet/dist/leaflet.css`), unlike the md-editor's.
+- `@uiw/react-md-editor` is the only rich-text/Markdown editing dependency in the repo (used for `Passeio.descriptionMd`); its CSS is auto-injected by the package import, no separate stylesheet import needed. Rendered Markdown elsewhere (e.g. `PasseioList.tsx`) uses its bundled `MDEditor.Markdown` component rather than pulling in a second Markdown renderer.
+- ESLint only lints `**/*.{js,jsx}` (not `.ts`/`.tsx`) — TypeScript errors surface via `tsc`/editor instead, not `yarn lint`.
+- `calendar/TESTE.jsx` and `japan_trip_daisyui.html` at the repo root look like scratch/reference files, not part of the build.

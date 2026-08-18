@@ -2,6 +2,8 @@ import React from "react";
 import { SlotType } from "@/types";
 import { ReservationMoment } from "./types/ReservationMoment";
 import { TicketMoment } from "./types/TicketMoment";
+import { PasseioMoment } from "./types/PasseioMoment";
+import CalendarPasseioTag from "./CalendarPasseioTag";
 import { darkenHex } from "./utils/styleUtils";
 
 interface CalendarCellProps {
@@ -10,6 +12,8 @@ interface CalendarCellProps {
 	ticketList: TicketMoment[];
 	reservationList: ReservationMoment[];
 	reservationDayColor: string | undefined;
+	passeioList: PasseioMoment[];
+	passeioDayColor: string | undefined;
 }
 
 export default function CalendarCell({
@@ -18,20 +22,32 @@ export default function CalendarCell({
 	ticketList,
 	reservationList,
 	reservationDayColor,
+	passeioList,
+	passeioDayColor,
 }: CalendarCellProps) {
 	void iso;
 	void slot;
 	const baseCellBackground = reservationDayColor
 		? `${reservationDayColor}33`
-		: undefined;
+		: passeioDayColor
+			? `${passeioDayColor}33`
+			: undefined;
 
-	if (ticketList.length > 0 || reservationList.length > 0) {
+	if (
+		ticketList.length > 0 ||
+		reservationList.length > 0 ||
+		passeioList.length > 0
+	) {
 		const fallbackInnerBg = reservationDayColor
 			? `${reservationDayColor}66`
-			: "#f9fafb";
+			: passeioDayColor
+				? `${passeioDayColor}66`
+				: "#f9fafb";
 		const fallbackInnerText = reservationDayColor
 			? darkenHex(reservationDayColor, 0.55)
-			: "#374151";
+			: passeioDayColor
+				? darkenHex(passeioDayColor, 0.55)
+				: "#374151";
 
 		return (
 			<td
@@ -81,6 +97,14 @@ export default function CalendarCell({
 							{reservationMoment.kind === "checkin" ? "↓" : "↑"}{" "}
 							{reservationMoment.time} {reservationMoment.label}
 						</div>
+					))}
+					{passeioList.map((passeioMoment) => (
+						<CalendarPasseioTag
+							key={passeioMoment.id}
+							moment={passeioMoment}
+							dayColor={passeioDayColor}
+							fontSize={9}
+						/>
 					))}
 				</div>
 			</td>

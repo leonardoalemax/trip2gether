@@ -1,0 +1,11 @@
+{
+	"version": "0.0.1",
+	"configurations": [
+		{
+			"name": "trip2gether-dev",
+			"runtimeExecutable": "yarn",
+			"runtimeArgs": ["dev", "--port", "5199", "--strictPort"],
+			"port": 5199
+		}
+	]
+}

@@ -7,10 +7,12 @@
 		"dev": "vite",
 		"build": "vite build",
 		"lint": "eslint .",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"backfill:trip-codes": "node scripts/backfillTripCodes.mjs"
 	},
 	"dependencies": {
 		"@types/leaflet": "^1.9.21",
+		"@uiw/react-md-editor": "^4.1.1",
 		"daisyui": "^5.5.19",
 		"firebase": "^12.11.0",
 		"leaflet": "^1.9.4",
@@ -29,6 +31,7 @@
 		"eslint": "^9.39.4",
 		"eslint-plugin-react-hooks": "^7.0.1",
 		"eslint-plugin-react-refresh": "^0.5.2",
+		"firebase-admin": "^14.2.0",
 		"globals": "^17.4.0",
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",

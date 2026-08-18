@@ -70,6 +70,49 @@ export type DraftReservation = Omit<
 	paymentType: PaymentType | "";
 };
 
+export type PasseioItemType = "ingresso" | "transporte" | "outros";
+
+export interface PasseioItem {
+	id: string;
+	title: string;
+	type: PasseioItemType;
+	value?: string;
+	purchased: boolean;
+}
+
+export interface PasseioCheckpoint {
+	id: string;
+	title: string;
+	address?: string;
+	entryTime: string;
+	exitTime: string;
+}
+
+export interface Passeio {
+	id: string;
+	tripId: string;
+	title: string;
+	city: string;
+	address?: string;
+	timezone: string;
+	departureDate: string;
+	departureTime: string;
+	returnDate: string;
+	returnTime: string;
+	items: PasseioItem[];
+	checkpoints: PasseioCheckpoint[];
+	descriptionMd?: string;
+	color: string;
+	createdByUserId: string;
+	createdByEmail: string;
+	createdAt: string;
+}
+
+export type DraftPasseio = Omit<
+	Passeio,
+	"id" | "tripId" | "createdAt" | "createdByUserId" | "createdByEmail"
+>;
+
 export interface TripInvite {
 	id: string;
 	tripId: string;
@@ -91,4 +134,10 @@ export interface Trip {
 	createdAt: string;
 }
 
-export type ScreenType = "calendar" | "tickets" | "reservations" | "payments";
+export type ScreenType =
+	| "calendar"
+	| "itinerary"
+	| "tickets"
+	| "reservations"
+	| "passeios"
+	| "payments";
